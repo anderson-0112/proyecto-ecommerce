@@ -1,0 +1,21 @@
+stateDiagram-v2
+    direction TB
+    [*] --> Pendiente: Cliente crea el pedido<br/>POST /api/pedidos
+    Pendiente --> Pagado: Pago confirmado<br/>(notifica pagos-service)
+    Pagado --> Preparando: Administrador cambia estado<br/>PUT /api/pedidos/{id}/estado
+    Preparando --> Enviado: Administrador cambia estado<br/>PUT /api/pedidos/{id}/estado
+    Enviado --> Entregado: Administrador cambia estado<br/>PUT /api/pedidos/{id}/estado
+    Entregado --> [*]
+
+    note right of Pagado
+        Estado del flujo de compra (sección 3.1).
+        No figura en la lista de la sección 6.3.
+        Ubicación [PENDIENTE] de confirmar.
+    end note
+    note right of Pendiente
+        Pago rechazado o pedido
+        cancelado: [PENDIENTE]
+    end note
+
+    classDef pend stroke-dasharray: 6 4,stroke:#b03a2e,stroke-width:2px,fill:#fff7f5
+    class Pagado pend

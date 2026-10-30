@@ -1,0 +1,50 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuario<br/>(cliente o administrador)
+    participant GW as API Gateway<br/>(Nginx)
+    participant AUTH as auth-service
+    participant DB as auth_db
+    participant SRV as Servicio protegido<br/>(ej. pedidos, catálogo)
+
+    rect rgba(120,160,200,0.12)
+    Note over U,DB: Fase 1. Registro (solo clientes)
+    U->>GW: POST /api/auth/register (nombre, email, password)
+    GW->>AUTH: POST /api/auth/register
+    AUTH->>AUTH: Cifrar password con bcrypt
+    AUTH->>DB: INSERT usuario (rol: cliente)
+    DB-->>AUTH: Usuario creado
+    AUTH-->>GW: Registro exitoso
+    GW-->>U: Registro exitoso
+    end
+
+    rect rgba(200,170,110,0.12)
+    Note over U,DB: Fase 2. Inicio de sesión
+    U->>GW: POST /api/auth/login (email, password)
+    GW->>AUTH: POST /api/auth/login
+    AUTH->>DB: SELECT usuario por email
+    DB-->>AUTH: Datos del usuario (password_hash, rol)
+    AUTH->>AUTH: Verificar password con bcrypt
+    AUTH->>AUTH: Generar JWT firmado con el rol<br/>(expira en 2 h cliente / 8 h administrador)
+    AUTH-->>GW: JWT
+    GW-->>U: JWT
+    end
+
+    rect rgba(130,180,140,0.12)
+    Note over U,SRV: Fase 3. Acceso a un recurso protegido
+    U->>GW: Petición con encabezado Authorization: Bearer JWT
+    GW->>SRV: Petición + JWT
+    SRV->>AUTH: POST /api/auth/verify (JWT)
+    alt Token válido y rol con permiso
+        AUTH-->>SRV: Token válido + rol
+        SRV-->>GW: Respuesta con los datos solicitados
+        GW-->>U: Respuesta con los datos solicitados
+    else Token inválido o expirado
+        AUTH-->>SRV: Token no válido
+        SRV-->>GW: Acceso denegado
+        GW-->>U: Acceso denegado
+    else Token válido, pero rol sin permiso
+        AUTH-->>SRV: Token válido + rol cliente
+        SRV-->>GW: Acceso denegado (requiere administrador)
+        GW-->>U: Acceso denegado
+    end
+    end

@@ -1,0 +1,43 @@
+sequenceDiagram
+    autonumber
+    actor C as Cliente
+    participant GW as API Gateway<br/>(Nginx)
+    participant CAT as catalogo-service
+    participant SL as MariaDB Slave
+    participant PED as pedidos-service
+    participant PAG as pagos-service
+    participant MA as MariaDB Master
+    participant NOT as notificaciones-service<br/>(DETENIDO)
+
+    Note over NOT: Contenedor detenido<br/>durante la prueba
+
+    rect rgba(120,160,200,0.12)
+    Note over C,SL: Fase 1. El catálogo sigue disponible
+    C->>GW: GET /api/catalogo/productos
+    GW->>CAT: GET /api/catalogo/productos
+    CAT->>SL: SELECT productos (lectura)
+    SL-->>CAT: Lista de productos
+    CAT-->>GW: Productos (JSON)
+    GW-->>C: Catálogo visible con normalidad
+    end
+
+    rect rgba(200,170,110,0.12)
+    Note over C,MA: Fase 2. La compra se completa
+    C->>GW: POST /api/pedidos
+    GW->>PED: POST /api/pedidos
+    Note over PED,PAG: Verificación de stock y cobro con Stripe o PayPal<br/>(igual que en el diagrama de flujo de compra)
+    PAG->>PED: Notificar pago confirmado
+    PED->>MA: UPDATE pedido (estado: pagado)
+    end
+
+    rect rgba(220,120,120,0.14)
+    Note over PAG,NOT: Fase 3. Falla aislada en notificaciones
+    PAG-xNOT: Notificar pago confirmado
+    Note over PAG,NOT: Sin respuesta: el servicio está detenido.<br/>Manejo de la falla [PENDIENTE]
+    end
+
+    rect rgba(130,180,140,0.12)
+    Note over C,PED: Fase 4. El cliente recibe la confirmación
+    PED-->>GW: Pedido confirmado
+    GW-->>C: Confirmación del pedido (sin email)
+    end

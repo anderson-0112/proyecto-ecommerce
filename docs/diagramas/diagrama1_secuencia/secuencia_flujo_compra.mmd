@@ -1,0 +1,57 @@
+sequenceDiagram
+    autonumber
+    actor C as Cliente
+    participant GW as API Gateway<br/>(Nginx)
+    participant CAT as catalogo-service
+    participant PED as pedidos-service
+    participant PAG as pagos-service
+    participant NOT as notificaciones-service
+    participant SL as MariaDB Slave
+    participant MA as MariaDB Master
+    participant PP as Pasarela de pago<br/>(Stripe / PayPal)
+    participant EJ as EmailJS
+
+    Note over C,EJ: Cada llamada interna entre servicios incluye un JWT, verificado mediante auth-service (POST /api/auth/verify)
+
+    rect rgba(120,160,200,0.12)
+    Note over C,SL: Fase 1. Consulta del catálogo
+    C->>GW: GET /api/catalogo/productos
+    GW->>CAT: GET /api/catalogo/productos
+    CAT->>SL: SELECT productos (lectura)
+    SL-->>CAT: Lista de productos
+    CAT-->>GW: 200 OK + productos (JSON)
+    GW-->>C: Catálogo con imágenes (Cloudinary)
+    end
+
+    rect rgba(200,170,110,0.12)
+    Note over C,MA: Fase 2. Creación del pedido
+    C->>GW: POST /api/pedidos (carrito)
+    GW->>PED: POST /api/pedidos
+    PED->>CAT: Verificar stock
+    CAT-->>PED: Stock disponible
+    PED->>MA: INSERT pedido (estado: pendiente)
+    end
+
+    rect rgba(130,180,140,0.12)
+    Note over PED,PP: Fase 3. Procesamiento del pago
+    alt Pago con tarjeta
+        PED->>PAG: POST /api/pagos/stripe
+        PAG->>PP: Cobro con Stripe (sandbox)
+    else Pago con PayPal
+        PED->>PAG: POST /api/pagos/paypal
+        PAG->>PP: Cobro con PayPal (sandbox)
+    end
+    PP-->>PAG: Pago confirmado + referencia
+    PAG->>MA: INSERT pago (referencia de la transacción)
+    end
+
+    rect rgba(190,140,160,0.12)
+    Note over PED,EJ: Fase 4. Confirmación
+    PAG->>PED: Notificar pago confirmado
+    PED->>MA: UPDATE pedido (estado: pagado)
+    PAG->>NOT: Notificar pago confirmado
+    NOT->>EJ: Enviar email de confirmación
+    EJ-->>C: Email de confirmación del pedido
+    PED-->>GW: Pedido confirmado
+    GW-->>C: Confirmación del pedido
+    end

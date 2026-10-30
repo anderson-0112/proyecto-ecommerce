@@ -1,0 +1,16 @@
+# Secretos: NUNCA subir el .env real (solo .env.example)
+.env
+.env.*
+!.env.example
+
+# Dependencias y temporales
+vendor/
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Copias temporales de Office
+~$*
