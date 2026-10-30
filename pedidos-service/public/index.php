@@ -198,7 +198,19 @@ if ($metodo === 'GET' && $ruta === '/api/pedidos') {
         $sql .= ' p.estado = ?';
         $parametros[] = $_GET['estado'];
     }
-    $consulta = conexion()->prepare($sql . ' ORDER BY p.id DESC LIMIT 200');
+    if (($_GET['desde'] ?? '') !== '') { // fecha AAAA-MM-DD (reportes del dashboard)
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['desde'])) {
+            error(400, 'El parámetro desde debe tener formato AAAA-MM-DD');
+        }
+        $sql .= $parametros ? ' AND' : ' WHERE';
+        $sql .= ' p.fecha >= ?';
+        $parametros[] = $_GET['desde'];
+    }
+    // D9: el listado del admin alimenta los reportes/dashboard y se lee del Slave;
+    // el cliente lee del Master para ver su compra recién hecha sin retraso de réplica.
+    $esAdmin = $usuario['rol'] === 'admin';
+    $db = $esAdmin ? conexion('DB_READ_HOST') : conexion();
+    $consulta = $db->prepare($sql . ' ORDER BY p.id DESC LIMIT ' . ($esAdmin ? 2000 : 200));
     $consulta->execute($parametros);
     $pedidos = array_map(fn($p) => ['total' => (float) $p['total'], 'id' => (int) $p['id']] + $p, $consulta->fetchAll());
     responder(200, ['pedidos' => $pedidos]);

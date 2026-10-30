@@ -2,7 +2,7 @@
 /**
  * catalogo-service (puerto 8082) — productos, categorías y stock.
  * Base de datos: catalogo_db.
- *  - Lecturas públicas desde DB_READ_HOST (réplica Slave a partir del Bloque 2).
+ *  - Lecturas públicas desde DB_READ_HOST (réplica Slave) con caché en Redis.
  *  - Escrituras (admin) y control de stock desde DB_HOST (Master).
  */
 declare(strict_types=1);
@@ -89,9 +89,58 @@ function leerItems(): array
     return $porProducto;
 }
 
-/** Limpia la caché de catálogo (se implementa con Redis en el Bloque 2). */
+// ---------------- Caché del catálogo en Redis ----------------
+// Las lecturas públicas se guardan en Redis durante CACHE_TTL segundos.
+// Para invalidar todo de una vez se sube "catalogo:version": las claves nuevas llevan
+// la versión en el nombre, así que las viejas dejan de usarse y expiran solas.
+const CACHE_TTL = 30;
+
+function claveCache(string $nombre): ?string
+{
+    try {
+        $version = redis()?->get('catalogo:version') ?: '0';
+        return redis() ? "catalogo:v{$version}:{$nombre}" : null;
+    } catch (RedisException $e) {
+        return null;
+    }
+}
+
+/**
+ * Responde desde Redis si la consulta ya está en caché (X-Cache: HIT);
+ * si no, ejecuta $consulta contra la BD (Slave), la guarda y responde (X-Cache: MISS).
+ */
+function responderConCache(string $nombre, callable $consulta): never
+{
+    $clave = claveCache($nombre);
+    try {
+        $guardado = $clave ? redis()->get($clave) : false;
+    } catch (RedisException $e) {
+        $guardado = false;
+    }
+    if ($guardado) {
+        header('X-Cache: HIT');
+        responder(200, json_decode($guardado, true));
+    }
+    $datos = $consulta();
+    if ($clave) {
+        try {
+            redis()->setex($clave, CACHE_TTL, json_encode($datos, JSON_UNESCAPED_UNICODE));
+        } catch (RedisException $e) {
+            error_log('No se pudo guardar en caché: ' . $e->getMessage());
+        }
+    }
+    header('X-Cache: ' . ($clave ? 'MISS' : 'SIN-REDIS'));
+    responder(200, $datos);
+}
+
+/** Invalida toda la caché del catálogo (tras crear, editar, borrar o descontar stock). */
 function invalidarCache(): void
 {
+    try {
+        redis()?->incr('catalogo:version');
+    } catch (RedisException $e) {
+        error_log('No se pudo invalidar la caché: ' . $e->getMessage());
+    }
 }
 
 // =============================================================
@@ -99,8 +148,13 @@ function invalidarCache(): void
 // =============================================================
 
 if ($metodo === 'GET' && in_array($ruta, ['/health', '/api/catalogo/health'], true)) {
-    conexion('DB_READ_HOST')->query('SELECT 1');
-    responder(200, ['servicio' => 'catalogo-service', 'estado' => 'ok', 'lecturas_desde' => getenv('DB_READ_HOST')]);
+    $redisActivo = false;
+    try {
+        $redisActivo = redis()?->ping() !== null;
+    } catch (RedisException $e) {
+    }
+    responder(200, ['servicio' => 'catalogo-service', 'estado' => 'ok',
+                    'lecturas_desde' => servidorLectura(), 'redis' => $redisActivo]);
 }
 
 // ---------- GET /api/catalogo/productos?categoria=&precio_max=&pagina=&por_pagina= ----------
@@ -126,53 +180,60 @@ if ($metodo === 'GET' && $ruta === '/api/catalogo/productos') {
     $porPagina = min(50, max(1, (int) ($_GET['por_pagina'] ?? 12)));
     $donde     = implode(' AND ', $condiciones);
 
-    $db = conexion('DB_READ_HOST'); // lectura
-    $total = $db->prepare("SELECT COUNT(*) FROM productos p WHERE $donde");
-    $total->execute($parametros);
-    $total = (int) $total->fetchColumn();
+    $claveConsulta = 'productos:' . md5(json_encode([$parametros, $donde, $pagina, $porPagina]));
+    responderConCache($claveConsulta, function () use ($donde, $parametros, $pagina, $porPagina) {
+        $db = conexion('DB_READ_HOST'); // lectura desde el Slave
+        $total = $db->prepare("SELECT COUNT(*) FROM productos p WHERE $donde");
+        $total->execute($parametros);
+        $total = (int) $total->fetchColumn();
 
-    $offset = ($pagina - 1) * $porPagina;
-    $consulta = $db->prepare("SELECT " . CAMPOS_PRODUCTO . " FROM productos p
-        LEFT JOIN categorias c ON c.id = p.categoria_id
-        WHERE $donde ORDER BY p.id LIMIT $porPagina OFFSET $offset");
-    $consulta->execute($parametros);
+        $offset = ($pagina - 1) * $porPagina;
+        $consulta = $db->prepare("SELECT " . CAMPOS_PRODUCTO . " FROM productos p
+            LEFT JOIN categorias c ON c.id = p.categoria_id
+            WHERE $donde ORDER BY p.id LIMIT $porPagina OFFSET $offset");
+        $consulta->execute($parametros);
 
-    responder(200, [
-        'productos'     => array_map('formatearProducto', $consulta->fetchAll()),
-        'pagina'        => $pagina,
-        'por_pagina'    => $porPagina,
-        'total'         => $total,
-        'total_paginas' => (int) ceil($total / $porPagina),
-    ]);
+        return [
+            'productos'     => array_map('formatearProducto', $consulta->fetchAll()),
+            'pagina'        => $pagina,
+            'por_pagina'    => $porPagina,
+            'total'         => $total,
+            'total_paginas' => (int) ceil($total / $porPagina),
+        ];
+    });
 }
 
 // ---------- GET /api/catalogo/productos/{id} ----------
 if ($metodo === 'GET' && preg_match('#^/api/catalogo/productos/(\d+)$#', $ruta, $m)) {
-    $consulta = conexion('DB_READ_HOST')->prepare("SELECT " . CAMPOS_PRODUCTO . " FROM productos p
-        LEFT JOIN categorias c ON c.id = p.categoria_id WHERE p.id = ? AND p.activo = 1");
-    $consulta->execute([(int) $m[1]]);
-    $producto = $consulta->fetch();
-    if (!$producto) {
-        error(404, 'Producto no encontrado');
-    }
-    responder(200, ['producto' => formatearProducto($producto)]);
+    $id = (int) $m[1];
+    responderConCache("producto:{$id}", function () use ($id) {
+        $consulta = conexion('DB_READ_HOST')->prepare("SELECT " . CAMPOS_PRODUCTO . " FROM productos p
+            LEFT JOIN categorias c ON c.id = p.categoria_id WHERE p.id = ? AND p.activo = 1");
+        $consulta->execute([$id]);
+        $producto = $consulta->fetch();
+        if (!$producto) {
+            error(404, 'Producto no encontrado'); // el 404 no se guarda en caché
+        }
+        return ['producto' => formatearProducto($producto)];
+    });
 }
 
 // ---------- GET /api/catalogo/destacados ----------
 if ($metodo === 'GET' && $ruta === '/api/catalogo/destacados') {
-    $consulta = conexion('DB_READ_HOST')->query("SELECT " . CAMPOS_PRODUCTO . " FROM productos p
-        LEFT JOIN categorias c ON c.id = p.categoria_id
-        WHERE p.activo = 1 AND p.destacado = 1 ORDER BY p.id");
-    responder(200, ['productos' => array_map('formatearProducto', $consulta->fetchAll())]);
+    responderConCache('destacados', function () {
+        $consulta = conexion('DB_READ_HOST')->query("SELECT " . CAMPOS_PRODUCTO . " FROM productos p
+            LEFT JOIN categorias c ON c.id = p.categoria_id
+            WHERE p.activo = 1 AND p.destacado = 1 ORDER BY p.id");
+        return ['productos' => array_map('formatearProducto', $consulta->fetchAll())];
+    });
 }
 
 // ---------- GET /api/catalogo/categorias ----------
 if ($metodo === 'GET' && $ruta === '/api/catalogo/categorias') {
-    $categorias = conexion('DB_READ_HOST')->query('SELECT id, nombre, descripcion FROM categorias ORDER BY nombre')->fetchAll();
-    foreach ($categorias as &$c) {
-        $c['id'] = (int) $c['id'];
-    }
-    responder(200, ['categorias' => $categorias]);
+    responderConCache('categorias', function () {
+        $categorias = conexion('DB_READ_HOST')->query('SELECT id, nombre, descripcion FROM categorias ORDER BY nombre')->fetchAll();
+        return ['categorias' => array_map(fn($c) => ['id' => (int) $c['id']] + $c, $categorias)];
+    });
 }
 
 // ---------- POST /api/catalogo/productos (solo admin) ----------

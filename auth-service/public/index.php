@@ -1,7 +1,7 @@
 <?php
 /**
- * auth-service (puerto 8081) — registro, login y emisión/verificación de JWT.
- * Base de datos: auth_db (tabla usuarios).
+ * auth-service (puerto 8081) — registro, login, logout y emisión/verificación de JWT.
+ * Base de datos: auth_db (tabla usuarios). Redis: lista de tokens revocados.
  */
 declare(strict_types=1);
 
@@ -84,7 +84,7 @@ if ($metodo === 'POST' && $ruta === '/api/auth/login') {
         'rol'    => $usuario['rol'],
         'iat'    => time(),
         'exp'    => time() + $duracion,
-        'jti'    => bin2hex(random_bytes(8)), // id único del token (para revocarlo en el Bloque 2)
+        'jti'    => bin2hex(random_bytes(8)), // id único del token (para revocarlo con logout)
     ], getenv('JWT_SECRET'));
 
     responder(200, [
@@ -97,12 +97,50 @@ if ($metodo === 'POST' && $ruta === '/api/auth/login') {
     ]);
 }
 
+/**
+ * ¿El token fue revocado con logout? Se guarda en Redis la clave "revocado:<jti>".
+ * Si Redis no responde se registra el fallo y se acepta el token (el sistema sigue operando).
+ */
+function tokenRevocado(array $payload): bool
+{
+    $redis = redis();
+    if ($redis === null) {
+        error_log('No se pudo consultar la lista de tokens revocados (Redis no disponible)');
+        return false;
+    }
+    try {
+        return (bool) $redis->exists('revocado:' . $payload['jti']);
+    } catch (RedisException $e) {
+        error_log('Error consultando tokens revocados: ' . $e->getMessage());
+        return false;
+    }
+}
+
+// ---------- POST /api/auth/logout — revoca el token actual ----------
+if ($metodo === 'POST' && $ruta === '/api/auth/logout') {
+    $token = tokenBearer();
+    $payload = $token !== null ? jwt_verificar($token, getenv('JWT_SECRET')) : null;
+    if ($payload === null) {
+        error(401, 'Token inválido o expirado');
+    }
+    $redis = redis();
+    if ($redis === null) {
+        error(503, 'No se pudo cerrar la sesión: Redis no disponible');
+    }
+    // La clave vive solo hasta que el token habría expirado; después Redis la borra sola
+    $redis->setex('revocado:' . $payload['jti'], max(1, $payload['exp'] - time()), '1');
+    responder(204);
+}
+
 // ---------- POST /api/auth/verify (interno: lo usan los demás servicios) ----------
 if ($metodo === 'POST' && $ruta === '/api/auth/verify') {
     $token = tokenBearer() ?? (string) (cuerpoJson()['token'] ?? '');
     $payload = $token !== '' ? jwt_verificar($token, getenv('JWT_SECRET')) : null;
     if ($payload === null) {
         error(401, 'Token inválido o expirado', ['valido' => false]);
+    }
+    if (tokenRevocado($payload)) {
+        error(401, 'Token revocado (la sesión fue cerrada)', ['valido' => false]);
     }
     responder(200, [
         'valido'  => true,

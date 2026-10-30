@@ -52,26 +52,87 @@ function tokenBearer(): ?string
 
 /**
  * Conexión PDO a MariaDB. $variableHost permite elegir el servidor
- * (DB_HOST = Master para escrituras; DB_READ_HOST = réplica de lectura).
+ * (DB_HOST = Master para escrituras; DB_READ_HOST = Slave para lecturas).
+ * Si el Slave no responde, se lee del Master (tolerancia a fallos).
  */
 function conexion(string $variableHost = 'DB_HOST'): PDO
 {
     static $conexiones = [];
     $host = getenv($variableHost) ?: getenv('DB_HOST');
+    // Si el Slave falló hace poco (marca en Redis), se va directo al Master sin esperar el timeout
+    if ($variableHost !== 'DB_HOST' && marcaCaida($host)) {
+        return conexion('DB_HOST');
+    }
     if (!isset($conexiones[$host])) {
-        $conexiones[$host] = new PDO(
-            "mysql:host={$host};dbname=" . getenv('DB_NAME') . ';charset=utf8mb4',
-            getenv('DB_USER'),
-            getenv('DB_PASSWORD'),
-            [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false, // consultas preparadas reales
-                PDO::ATTR_TIMEOUT            => 3,
-            ]
-        );
+        try {
+            $conexiones[$host] = new PDO(
+                "mysql:host={$host};dbname=" . getenv('DB_NAME') . ';charset=utf8mb4',
+                getenv('DB_USER'),
+                getenv('DB_PASSWORD'),
+                [
+                    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES   => false, // consultas preparadas reales
+                    PDO::ATTR_TIMEOUT            => $variableHost === 'DB_HOST' ? 3 : 1, // réplica: falla rápido
+                ]
+            );
+        } catch (PDOException $e) {
+            if ($variableHost === 'DB_HOST') {
+                throw $e;
+            }
+            error_log("Réplica de lectura {$host} no disponible; se lee del Master");
+            marcaCaida($host, true);
+            $conexiones[$host] = conexion('DB_HOST'); // se recuerda para no reintentar en esta petición
+        }
     }
     return $conexiones[$host];
+}
+
+/**
+ * Marca (o consulta) en Redis que un servidor está caído durante 15 s, para que las
+ * siguientes peticiones no esperen otra vez el timeout de conexión.
+ */
+function marcaCaida(string $host, bool $marcar = false): bool
+{
+    try {
+        if ($marcar) {
+            redis()?->setex("caido:{$host}", 15, '1');
+            return true;
+        }
+        return (bool) redis()?->exists("caido:{$host}");
+    } catch (RedisException $e) {
+        return false;
+    }
+}
+
+/** Indica qué servidor atiende las lecturas, según su server_id (1 = Master, 2 = Slave). */
+function servidorLectura(): string
+{
+    $id = (int) conexion('DB_READ_HOST')->query('SELECT @@server_id')->fetchColumn();
+    return $id === 1 ? 'Master (server_id=1)' : "Slave (server_id={$id})";
+}
+
+/**
+ * Conexión a Redis (extensión phpredis). Devuelve null si Redis no está disponible:
+ * el servicio sigue funcionando sin caché (tolerancia a fallos).
+ */
+function redis(): ?Redis
+{
+    static $redis = false;
+    if ($redis === false) {
+        $redis = null;
+        if (class_exists('Redis') && getenv('REDIS_HOST')) {
+            try {
+                $r = new Redis();
+                $r->connect(getenv('REDIS_HOST'), 6379, 1.0);
+                $r->auth((string) getenv('REDIS_PASSWORD'));
+                $redis = $r;
+            } catch (Throwable $e) {
+                error_log('Redis no disponible: ' . $e->getMessage());
+            }
+        }
+    }
+    return $redis;
 }
 
 /**

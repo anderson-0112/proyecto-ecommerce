@@ -1,0 +1,27 @@
+
+== Lecturas desde el Slave ==
+  [OK]    catalogo-service lee del Slave (server_id=2)
+  [OK]    catalogo-service conectado a Redis
+
+== Replicación: escribir en Master, leer en Slave ==
+  [OK]    Admin crea producto (INSERT en el Master) -> 201
+  [OK]    El producto se lee desde el Slave (0.00 s)
+
+== Caché de catálogo en Redis ==
+  [OK]    Segunda lectura sale de la caché (X-Cache: HIT)
+  [OK]    Admin cambia el precio -> 200
+  [OK]    Tras el cambio la caché se invalida (X-Cache: MISS)
+  [OK]    El precio nuevo se ve en la tienda
+
+== Logout y tokens revocados ==
+  [OK]    Con el token activo, GET /api/pedidos -> 200
+  [OK]    POST /api/auth/logout -> 204
+  [OK]    El mismo token ya no sirve (revocado en Redis) -> 401
+  [OK]    Logout sin token -> 401
+  [OK]    Un login nuevo genera un token válido -> 200
+
+== Reportes del admin desde el Slave ==
+  [OK]    Admin lista pedidos con filtro de fecha -> 200
+  [OK]    Fecha con formato incorrecto -> 400
+
+Resultado: 15 correctas, 0 con fallo

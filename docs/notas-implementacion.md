@@ -95,3 +95,44 @@ Pendiente de bloques siguientes: `POST /api/auth/logout` (Bloque 2), `POST /api/
 - `pruebas/prueba-bloque1.php` → `pruebas/resultado-bloque1.txt`: **41 correctas, 0 con fallo** (30-oct).
 - Compra manual en `http://localhost/prueba-compra.html` con 4242 4242 4242 4242 · 12/29 · 123 → pedido #5 `pagado`, pago `aprobado` con `pi_…`, stock del iPhone 15 de 15 a 14.
 - Tolerancia: con `notificaciones-service` detenido, la compra respondió 201, pedido `pagado`, `correo_enviado: false` y el mensaje "No se pudo enviar el correo: servicio de notificaciones no disponible" (≈ 4 s).
+
+## Bloque 2 — Datos distribuidos (30-oct-2026)
+
+### Versiones nuevas
+| Componente | Versión |
+|---|---|
+| MariaDB Slave | 10.6.28 (imagen `mariadb:10.6`) |
+| Redis | 7 (imagen `redis:7-alpine`), AOF activado, con contraseña |
+| phpredis | 6.1.0 (en auth-service y catalogo-service) |
+
+### Contenedores (total 9)
+gateway, auth-service, catalogo-service, pedidos-service, pagos-service, notificaciones-service, mariadb-master, **mariadb-slave**, **redis** (+ volúmenes `master-data`, `slave-data`, `redis-data`). Solo el gateway publica puerto.
+
+### Replicación
+- Master: `--server-id=1 --log-bin=mysql-bin --binlog-format=ROW`; usuario `replicador` con `REPLICATION REPLICA` (variables `MARIADB_REPLICATION_USER/PASSWORD`).
+- Slave: `--server-id=2 --read-only=1 --relay-log=relay-bin`; `MARIADB_MASTER_HOST=mariadb-master`. Replica desde el inicio del binlog (incluye esquema, datos semilla y usuarios de servicio).
+- Lecturas desde el Slave: catalogo-service (todas las lecturas públicas) y `GET /api/pedidos` cuando lo consulta un admin (reportes, D9). Verificar y descontar stock se hace en el Master.
+- Evidencia: `SHOW SLAVE STATUS` → `Slave_IO_Running: Yes`, `Slave_SQL_Running: Yes`, `Seconds_Behind_Master: 0`; producto creado en el Master visible en el Slave en ≈ 0.01 s (`pruebas/resultado-bloque2.txt`).
+- Si el Slave cae: lectura desde el Master (≈ 1 s la primera petición, luego ≈ 0.01 s gracias a la marca `caido:<host>` en Redis, 15 s).
+
+### Redis
+- Caché del catálogo: claves `catalogo:v<versión>:productos:<md5 de filtros>`, `…:producto:<id>`, `…:destacados`, `…:categorias`; TTL 30 s; invalidación con `INCR catalogo:version`. Encabezado `X-Cache: HIT | MISS | SIN-REDIS`.
+- Tokens revocados: `revocado:<jti>` con `SETEX` igual al tiempo restante del token.
+- Si Redis cae: catálogo 200 con `X-Cache: SIN-REDIS` (≈ 1 s); compras y consultas siguen; `POST /api/auth/logout` → 503.
+
+### Rutas y cambios
+| Método y ruta | Acceso | Códigos | Nota |
+|---|---|---|---|
+| `POST /api/auth/logout` | con token | 204, 401, 503 | Nueva (D8) |
+| `POST /api/auth/verify` | interno | 200, 401 | Rechaza tokens revocados: `{"error":"Token revocado (la sesión fue cerrada)","valido":false}` |
+| `GET /api/pedidos?estado=&desde=AAAA-MM-DD` | dueño / admin | 200, 400, 401 | Nuevo parámetro `desde`; el admin lee del Slave (hasta 2000 filas) |
+| `GET /api/catalogo/health` | público | 200 | Informa `lecturas_desde` (`Slave (server_id=2)` o `Master (server_id=1)`) y `redis` |
+
+### Variables nuevas en `.env`
+`REPLICATION_PASSWORD`, `REDIS_PASSWORD` (opcional `REDIS_HOST`, por defecto `redis`). `DB_READ_HOST` vale `mariadb-slave` por defecto.
+
+### Otros
+- `php.ini` por servicio: `display_errors=Off`, errores al log del contenedor.
+- `dns_opt: timeout:1, attempts:1` en los servicios PHP: un contenedor detenido se detecta en 1 s (antes ≈ 8 s).
+- Para aplicar el Bloque 2 sobre un volumen del Bloque 1 hay que recrear las BD con `docker compose down -v` (el binlog debe existir desde la creación del Master).
+- Pruebas: `pruebas/prueba-bloque2.php` 15/15; regresión `prueba-bloque1.php` 41/41.

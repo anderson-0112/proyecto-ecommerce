@@ -4,7 +4,7 @@ Proyecto Final No. 2 — Desarrollo de Aplicaciones Web (PHP, MySQL y Aplicacion
 
 > Tienda **ficticia** con fines académicos. Microservicios en PHP 8 + MariaDB + Nginx (API Gateway), orquestados con Docker Compose. Pagos con Stripe en **modo prueba**.
 
-## Arquitectura (Bloque 1)
+## Arquitectura
 
 | Contenedor | Puerto interno | Responsabilidad |
 |---|---|---|
@@ -14,9 +14,11 @@ Proyecto Final No. 2 — Desarrollo de Aplicaciones Web (PHP, MySQL y Aplicacion
 | `pedidos-service` | 8083 | Pedidos, estados, historial, QR de seguimiento |
 | `pagos-service` | 8084 | Cobro con Stripe, estado de pagos |
 | `notificaciones-service` | 8085 | Confirmación de pedido (correo real con EmailJS en el Bloque 4) |
-| `mariadb-master` (MariaDB 10.6) | 3306 | `auth_db`, `catalogo_db`, `pedidos_db`, `pagos_db` (aisladas) |
+| `mariadb-master` (MariaDB 10.6) | 3306 | Escrituras. `auth_db`, `catalogo_db`, `pedidos_db`, `pagos_db` (aisladas) |
+| `mariadb-slave` (MariaDB 10.6) | 3306 | Réplica de solo lectura: catálogo y reportes del admin |
+| `redis` (Redis 7) | 6379 | Caché del catálogo y tokens JWT revocados (logout) |
 
-Pendiente: MariaDB Slave + Redis (Bloque 2), tienda y panel admin (Bloque 3), PayPal, EmailJS, Cloudinary, OpenWeatherMap (Bloque 4), despliegue en VPS de Hostinger (Bloque 6).
+Pendiente: tienda y panel admin (Bloque 3), PayPal, EmailJS, Cloudinary, OpenWeatherMap (Bloque 4), despliegue en VPS de Hostinger (Bloque 6).
 
 ## Puesta en marcha
 
@@ -29,7 +31,9 @@ Pendiente: MariaDB Slave + Redis (Bloque 2), tienda y panel admin (Bloque 3), Pa
 4. Pruebas automáticas:
    ```bash
    docker run --rm --network ecommerce -v "${PWD}/pruebas:/pruebas" php:8.3-apache php /pruebas/prueba-bloque1.php
+   docker run --rm --network ecommerce -v "${PWD}/pruebas:/pruebas" php:8.3-apache php /pruebas/prueba-bloque2.php
    ```
+5. Ver la replicación: `docker exec -it mariadb-slave mariadb -uroot -p -e "SHOW SLAVE STATUS\G"`.
 
 Las URLs entre servicios y los datos de conexión a la BD son variables de entorno con los valores de Docker por defecto (ver `docker-compose.yml` y `.env.example`); el mismo archivo se usa en local y en el VPS.
 
