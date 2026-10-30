@@ -1,0 +1,57 @@
+
+== Catálogo (sin registro) ==
+  [OK]    GET /api/catalogo/productos -> 200 con 20+ productos
+  [OK]    Filtros categoria + precio_max
+  [OK]    GET /api/catalogo/destacados -> 200
+  [OK]    Producto inexistente -> 404
+
+== Autenticación ==
+  [OK]    Registro -> 201
+  [OK]    Correo repetido -> 409
+  [OK]    Datos no válidos -> 422
+  [OK]    Contraseña incorrecta -> 401
+  [OK]    Login cliente -> 200 + JWT (2 h)
+  [OK]    Login admin -> 200 + JWT (8 h)
+  [OK]    /api/auth/verify bloqueado desde el Gateway -> 403
+  [OK]    Token con rol alterado -> 401
+
+== Permisos ==
+  [OK]    Pedido sin token -> 401
+  [OK]    Cliente intenta crear producto -> 403
+  [OK]    Ruta interna "marcar pagado" bloqueada desde el Gateway -> 403
+
+== CRUD de catálogo (admin) ==
+  [OK]    Admin crea producto -> 201
+  [OK]    Admin actualiza precio -> 200
+  [OK]    Admin elimina (baja lógica) -> 204
+  [OK]    Producto dado de baja ya no se muestra -> 404
+
+== Compra ==
+  [OK]    Cantidad mayor al stock -> 409 (D3)
+  [OK]    Compra con tarjeta 4242 (pm_card_visa) -> 201
+  [OK]    Pedido en estado "pagado"
+  [OK]    Total calculado con precios del catálogo (2 x 99 + 80 = 278)
+  [OK]    Referencia de Stripe guardada (pi_...)
+  [OK]    QR de seguimiento generado
+  [OK]    La respuesta informa del correo (correo_mensaje)
+  [OK]    Stock descontado (D20): 25 -> 23
+  [OK]    Dueño consulta su pedido -> 200
+  [OK]    Otro cliente consulta el pedido -> 403 (D16)
+  [OK]    GET /api/pagos/{id}/estado -> aprobado
+  [OK]    Estado de pago ajeno -> 403
+  [OK]    Pagar dos veces el mismo pedido -> 409
+
+== Pago rechazado y reintento (D2) ==
+  [OK]    Tarjeta rechazada -> 422
+  [OK]    El pedido queda "pendiente"
+  [OK]    Reintento con 4242 -> 200 y pedido "pagado"
+
+== Estados del pedido (admin) ==
+  [OK]    Cliente cambia estado -> 403
+  [OK]    Saltar de "pagado" a "entregado" -> 409
+  [OK]    Admin avanza a "preparando" -> 200
+  [OK]    Admin avanza a "enviado" -> 200
+  [OK]    Admin avanza a "entregado" -> 200
+  [OK]    Admin ve el historial de todos los pedidos
+
+Resultado: 41 correctas, 0 con fallo

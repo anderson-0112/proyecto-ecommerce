@@ -1,6 +1,6 @@
 # CONTINUIDAD — Proyecto Final No. 2: E-Commerce Distribuido (Tienda de Electrónica y Tecnología)
 
-> Archivo de traspaso. Última actualización: **30 de octubre de 2026 (hora de Guatemala)** — cierre del Bloque 1.
+> Archivo de traspaso. Última actualización: **30 de octubre de 2026 (hora de Guatemala)** — cierre del Bloque 6.
 > **Fuente de verdad de los requisitos:** `Proyecto2_ECommerce_Distribuido.docx` (enunciado del ingeniero).
 > Si este archivo y el enunciado se contradicen, **manda el enunciado**.
 > Ubicación: raíz del Proyecto en Claude (Contexto) **y** `docs/CONTINUIDAD_PROYECTO2.md` en el repositorio. Mantener ambas copias iguales (ver sección 12).
@@ -9,9 +9,9 @@
 
 ## 0. Estado en una línea
 
-Análisis ✅ · Informe redactado (faltan C1 parcial, C7, C8, C10 y datos de implementación) ✅ · 7 diagramas ✅ · Arquitectura (Fig. 1) ⏳ · Decisiones D1–D21 y D-PAGO ✅ · **Bloque 0 ✅ · Bloque 1 ✅ (compra 4242 → pedido `pagado`; 41/41 pruebas) · Bloque 2 ✅ (Master-Slave + Redis; 15/15) · Bloque 3 ✅ (tienda NodoTec + panel admin) · Bloque 4 ✅ (7 APIs externas visibles) · Bloque 5 ✅ (138/138 pruebas)** · Hosting: **VPS de Hostinger** (A9 actualizada, 30-oct).
+Análisis ✅ · Informe redactado (faltan C1 parcial, C7, C8, C10 y datos de implementación) ✅ · 7 diagramas ✅ · Arquitectura (Fig. 1) ⏳ · Decisiones D1–D21 y D-PAGO ✅ · **Bloque 0 ✅ · Bloque 1 ✅ (compra 4242 → pedido `pagado`; 41/41 pruebas) · Bloque 2 ✅ (Master-Slave + Redis; 15/15) · Bloque 3 ✅ (tienda NodoTec + panel admin) · Bloque 4 ✅ (7 APIs externas visibles) · Bloque 5 ✅ (138/138 pruebas) · Bloque 6 ✅ (https://nodotec.tech; 138/138 en producción)** · Hosting: **VPS de Hostinger** (A9 actualizada, 30-oct).
 
-**Siguiente paso exacto:** **Bloque 6** (despliegue en el VPS de Hostinger) — requiere datos del VPS de Anderson (IP/dominio, acceso SSH). Bloques 0–5 terminados. En paralelo, el chat del Proyecto pasa al informe lo de `docs/notas-implementacion.md` (Bloques 1–5) y `docs/pruebas/`.
+**Siguiente paso exacto:** **Bloque 7** (documentación final, chat del Proyecto): Fig. 1 de arquitectura, pasar al informe `docs/notas-implementacion.md` (Bloques 1–6, sección 14 = Bloque 6) y `docs/pruebas/produccion/`, capturas desde https://nodotec.tech, PDF. Anderson: compra manual en producción con 4242 y con PayPal sandbox (no automatizable) antes de la demo.
 
 ---
 
@@ -169,9 +169,9 @@ Comando: `docker-compose up --build -d`.
 | 11. Base de datos | 🟡 Campos D5 completables ya; tipos y llaves tras el SQL final; replicación tras Bloque 2 |
 | 12. APIs externas | ✅ C11 aplicada · ⏳ cómo se integró cada API (tras Bloques 1 y 4) |
 | 13. Endpoints | ✅ C12 · 🟡 accesos completables ya (D16), agregar `POST /api/auth/logout` (D8) · ⏳ rutas CRUD finales, JSON y códigos (de `docs/notas-implementacion.md`) |
-| 14. Despliegue | ⏳ VPS de Hostinger (Docker Compose), procedimiento, URLs |
+| 14. Despliegue | 🟡 Completable ya: procedimiento y URLs en `docs/notas-implementacion.md` (Bloque 6) |
 | 15. Evidencias | ✅ C13 aplicada · ⚠️ falta cerrar el corchete en "[PENDIENTE: captura" · ⏳ capturas |
-| 16. Credenciales | ✅ C14 · 🟡 admin y cliente completables ya (D17) · ⏳ URLs y cuenta PayPal sandbox |
+| 16. Credenciales | ✅ C14 · 🟡 admin y cliente completables ya (D17) · URLs completables ya (https://nodotec.tech, /admin/) · ⏳ cuenta PayPal sandbox |
 | 17. Conclusiones | ⏳ Al final |
 | 18. Referencias | ⏳ Documentación oficial usada; norma de citación `[PENDIENTE — Anderson]` |
 | 19. Anexos | ⏳ Opcional |
@@ -263,8 +263,8 @@ No se hace diagrama de clases (se usa DER). Casos de uso: un solo diagrama.
 - Mismo `docker-compose.yml` que en local; solo cambia el `.env` (claves, `APP_URL`, opcionalmente `GATEWAY_PORT`).
 - Solo el Gateway publica puertos; MariaDB, Redis y los servicios quedan en la red interna `ecommerce`.
 - Firewall del VPS: abrir solo 22 (SSH), 80 y 443.
-- HTTPS: `[PENDIENTE]` dominio o IP pública y certificado (Let's Encrypt) — decidir en el Bloque 6.
-- Datos del VPS (plan, IP, acceso SSH): `[PENDIENTE — Anderson]`.
+- HTTPS: ✅ `nodotec.tech` + `www` con Let's Encrypt (Bloque 6).
+- VPS: Ubuntu 24.04, IP 179.197.91.34, SSH `root` solo con llave ed25519, proyecto en `/opt/proyecto-ecommerce`.
 - ~~Railway~~ descartado el 30-oct (A9).
 
 ### 7.2 Riesgos técnicos conocidos
@@ -301,8 +301,8 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 
 ## 10. Checklist de entrega final
 
-- [ ] URL pública de la tienda (catálogo sin registro)
-- [ ] URL del panel admin + credenciales
+- [x] URL pública de la tienda (catálogo sin registro) — https://nodotec.tech
+- [x] URL del panel admin + credenciales — https://nodotec.tech/admin/
 - [ ] Repo GitHub público con los 5 servicios, `docker-compose.yml`, README, sin secretos
 - [ ] Scripts SQL con 20+ productos con imágenes reales
 - [ ] PDF del informe (portada de Anderson + diagramas + endpoints + capturas)
@@ -330,6 +330,8 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 - 2026-10-30 — **Bloque 3 terminado:** tienda pública NodoTec (Bootstrap 5, responsive): catálogo sin registro con destacados, filtros y paginación, detalle, carrito en el navegador, registro/login, checkout con Stripe Elements (reintento sobre el mismo pedido si se rechaza, D2; 409 abre el carrito, D3), confirmación con QR, mis pedidos y página de seguimiento (destino del QR). Panel `/admin/`: dashboard Chart.js (ventas día/7 días/mes, ventas por día, pedidos por estado; datos del Slave), gestión de pedidos (detalle, siguiente estado, `mailto:`), CRUD de productos (imagen por URL; Cloudinary en Bloque 4) y PDF con jsPDF. Sin rutas nuevas. Corregida la clave de idempotencia de Stripe (incluye la fecha del pedido). Gateway con `Cache-Control: no-cache`. Probado en navegador (escritorio y 375 px); regresión 41/41 y 15/15.
 - 2026-10-30 — **Bloque 4 terminado:** EmailJS desde notificaciones-service (Private Key como `accessToken`, timeout 2.5 s; correo real enviado); PayPal sandbox en dos pasos dentro de `POST /api/pagos/paypal` (crear orden 202 → aprobación en ventana de PayPal → captura), `POST /api/pedidos` acepta `metodo_pago: paypal`; Cloudinary: 20 fotos migradas (URLs del CDN en `init-master.sql`) y subida firmada desde el CRUD (**ruta nueva** `POST /api/catalogo/imagenes`, admin); OpenWeatherMap en el dashboard (**ruta nueva** `GET /api/pedidos/clima`, admin, ciudad configurable en `.env`). Pruebas `prueba-bloque4.php` 16/16; compra PayPal sandbox completa en navegador (pedido `pagado`). Las pruebas automáticas usan compradores `@example.com` para no enviar correos a `test.com`.
 - 2026-10-30 — **Bloque 5 terminado:** `pruebas/ejecutar-pruebas.sh` corre todo en contenedores (bloques 1, 2 y 4, colección Postman con Newman, `SHOW SLAVE STATUS` y 5 escenarios de tolerancia deteniendo notificaciones, pagos, catálogo, Slave y Redis) y genera `docs/pruebas/reporte-pruebas.md` + `docs/pruebas/salidas/`. Colección `docs/pruebas/NodoTec.postman_collection.json` (35 peticiones, 48 aserciones). Resultado: **138 correctas, 0 con fallo**. Las salidas sueltas `pruebas/resultado-*.txt` se reemplazaron por `docs/pruebas/salidas/`.
+- 2026-10-30 — Aprobadas por Anderson las rutas nuevas del Bloque 4: `GET /api/pedidos/clima` y `POST /api/catalogo/imagenes` (solo admin).
+- 2026-10-30 — **Bloque 6 terminado:** desplegado en el VPS de Hostinger (Ubuntu 24.04, 179.197.91.34) con el mismo `docker-compose.yml`: **https://nodotec.tech** y **/admin/**. DNS ya correcto (A y AAAA al VPS). Docker 29.9 + Compose v5.6 desde el repositorio oficial, UFW (22/80/443), SSH solo con llave, swap 2 GB. `.env` de producción con claves nuevas (`openssl rand`) y `APP_URL=https://nodotec.tech`. HTTPS Let's Encrypt (HTTP-01, certbot en contenedor con perfil; renovación por cron, `--dry-run` OK; vence 28-ene-2027). Gateway: rutas movidas a `nginx/rutas.conf`; `nginx-https.conf` nuevo (80→301 HTTPS, `www`→dominio); compose publica 443 y elige config con `NGINX_CONF`. `ejecutar-pruebas.sh` acepta `GATEWAY`. Batería completa una vez contra la URL pública: **138/138** (`docs/pruebas/produccion/`).
 
 ---
 

@@ -191,3 +191,33 @@ Hacer una compra en la tienda: termina en `pagado` y avisa que el correo no se e
 ```bash
 docker compose start notificaciones-service
 ```
+
+## Bloque 6 — Despliegue en el VPS de Hostinger (nodotec.tech)
+
+- **URLs:** tienda https://nodotec.tech · panel https://nodotec.tech/admin/ (HTTP y `www` redirigen con 301 a `https://nodotec.tech`).
+- **Mismo `docker-compose.yml` que en local.** Lo único que cambia es el `.env` del servidor: claves de BD, Redis y JWT **nuevas y aleatorias** (`openssl rand`), `APP_URL=https://nodotec.tech` (enlace de seguimiento del correo y del QR) y `NGINX_CONF=nginx-https.conf`.
+- **Solo el Gateway publica puertos (80 y 443).** MariaDB, Redis y los 5 servicios no son alcanzables desde Internet: solo por la red interna `ecommerce`.
+- **Servidor:** Ubuntu 24.04 · Docker 29.9 + Compose v5.6 (repositorio oficial de Docker) · firewall UFW: solo 22, 80 y 443 · SSH solo con llave (`PasswordAuthentication no`) · swap de 2 GB.
+- **HTTPS (Let's Encrypt):**
+  1. El Gateway arranca con `nginx.conf` (HTTP), que sirve `/.well-known/acme-challenge/` desde `./certbot/www`.
+  2. `docker compose run --rm certbot certonly --webroot ...` → Let's Encrypt pide un archivo por HTTP a `nodotec.tech`, certbot lo deja en esa carpeta y así se prueba que controlamos el dominio (reto HTTP-01).
+  3. Con el certificado en `./certbot/conf`, se cambia a `nginx-https.conf` (TLS 1.2/1.3, redirección 80 → 443).
+  4. Renovación: cron diario (`/etc/cron.d/nodotec-certbot`) con `certbot renew` + `nginx -s reload`; `renew --dry-run` probado.
+- **Rutas sin duplicar:** las `location` del Gateway viven en `nginx/rutas.conf`, incluidas por `nginx.conf` y `nginx-https.conf`.
+- **Pruebas en producción:** `GATEWAY=https://nodotec.tech bash pruebas/ejecutar-pruebas.sh` en el VPS → **138 correctas, 0 con fallo** (reporte en `docs/pruebas/produccion/`). Se corrió una sola vez por el límite de 200 correos/mes de EmailJS.
+
+### Preguntas probables (Bloque 6)
+1. **¿Por qué un VPS y no Render/Railway?** Aprobado por el catedrático: permite el mismo `docker-compose.yml` con 9 contenedores (dos MariaDB con replicación y Redis), cosa que un PaaS gratuito no da.
+2. **¿Cómo se protege la BD en la nube?** No publica puerto; el firewall solo abre 22/80/443; cada servicio tiene su usuario con permisos solo sobre su BD; claves distintas a las de local.
+3. **¿Cómo actualizan el servidor?** `ssh root@179.197.91.34` → `cd /opt/proyecto-ecommerce && git pull && docker compose up --build -d`.
+
+### Comandos útiles en el VPS
+```bash
+ssh root@179.197.91.34
+```
+```bash
+cd /opt/proyecto-ecommerce && docker compose ps
+```
+```bash
+docker exec mariadb-slave sh -c 'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" -e "SHOW SLAVE STATUS\G"' | grep Running
+```

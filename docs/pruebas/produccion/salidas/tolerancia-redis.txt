@@ -1,0 +1,8 @@
+
+== Tolerancia: redis detenido ==
+  [OK]    El catálogo responde sin caché -> 200, X-Cache: SIN-REDIS
+  [OK]    El login sigue funcionando
+  [OK]    La compra termina -> 201 pagado
+  [OK]    Logout -> 503 (no se puede revocar sin Redis)
+
+Resultado: 4 correctas, 0 con fallo

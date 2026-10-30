@@ -2,13 +2,15 @@
 
 Proyecto Final No. 2 — Desarrollo de Aplicaciones Web (PHP, MySQL y Aplicaciones Distribuidas), UMG.
 
+**En producción:** tienda https://nodotec.tech · panel de administración https://nodotec.tech/admin/
+
 > Tienda **ficticia** con fines académicos. Microservicios en PHP 8 + MariaDB + Nginx (API Gateway), orquestados con Docker Compose. Pagos con Stripe en **modo prueba**.
 
 ## Arquitectura
 
 | Contenedor | Puerto interno | Responsabilidad |
 |---|---|---|
-| `gateway` (Nginx 1.27) | 80 — **único puerto publicado** | Entrada única: frontend + proxy a `/api/*`; bloquea rutas internas |
+| `gateway` (Nginx 1.27) | 80 y 443 — **únicos puertos publicados** | Entrada única: frontend + proxy a `/api/*`; bloquea rutas internas |
 | `auth-service` | 8081 | Registro, login, JWT (2 h cliente / 8 h admin), verificación |
 | `catalogo-service` | 8082 | Productos, categorías, filtros, paginación, stock, CRUD admin |
 | `pedidos-service` | 8083 | Pedidos, estados, historial, QR de seguimiento |
@@ -20,7 +22,20 @@ Proyecto Final No. 2 — Desarrollo de Aplicaciones Web (PHP, MySQL y Aplicacion
 
 APIs externas: Stripe, PayPal Sandbox, EmailJS, Cloudinary, OpenWeatherMap y QR Code API (api.qrserver.com).
 
-Pendiente: despliegue en VPS de Hostinger (Bloque 6).
+## Producción (VPS de Hostinger)
+
+| | URL |
+|---|---|
+| Tienda (catálogo sin registro) | https://nodotec.tech |
+| Panel de administración | https://nodotec.tech/admin/ |
+
+VPS Ubuntu 24.04 con Docker y el **mismo `docker-compose.yml`**; solo cambia el `.env` del servidor (claves propias, `APP_URL=https://nodotec.tech`, `NGINX_CONF=nginx-https.conf`). HTTPS con Let's Encrypt (renovación automática), firewall con solo 22/80/443 y SSH solo con llave. Pruebas en producción: **138/138** ([`docs/pruebas/produccion/reporte-pruebas.md`](docs/pruebas/produccion/reporte-pruebas.md)).
+
+Actualizar el servidor tras un `git push`:
+```bash
+ssh root@179.197.91.34 "cd /opt/proyecto-ecommerce && git pull && docker compose up --build -d"
+```
+Procedimiento completo de instalación y del certificado: [`docs/notas-implementacion.md`](docs/notas-implementacion.md) (Bloque 6).
 
 ## Puesta en marcha
 
@@ -56,7 +71,9 @@ Lista completa con accesos, códigos HTTP y ejemplos JSON: [`docs/notas-implemen
 ```
 proyecto-ecommerce/
 ├── docker-compose.yml
-├── nginx/nginx.conf            # API Gateway
+├── nginx/nginx.conf            # API Gateway (HTTP, local)
+├── nginx/nginx-https.conf      # API Gateway con HTTPS (VPS)
+├── nginx/rutas.conf            # rutas del Gateway (compartidas)
 ├── auth-service/               # Dockerfile + PHP (src/jwt.php)
 ├── catalogo-service/
 ├── pedidos-service/

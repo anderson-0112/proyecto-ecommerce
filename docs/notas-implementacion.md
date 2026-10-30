@@ -218,3 +218,41 @@ Variables: `to_email`, `cliente_nombre`, `pedido_id`, `total` (`US$ 99.00`), `en
 - Herramientas: contenedores `php:8.3-apache`, `postman/newman:6-alpine`, `curlimages/curl:8.10.1` (espera entre escenarios).
 - Tiempos medidos en tolerancia: compra con notificaciones caído ≈ 1–4 s; catálogo con Slave caído ≈ 1 s la primera petición, luego normal.
 - No automatizable (probado a mano en el navegador): tarjeta 4242 escrita en Stripe Elements y aprobación en la ventana de PayPal sandbox.
+
+## Bloque 6 — Despliegue en el VPS de Hostinger (30-oct-2026)
+
+### Datos del despliegue
+| Dato | Valor |
+|---|---|
+| URL de la tienda | https://nodotec.tech |
+| URL del panel admin | https://nodotec.tech/admin/ |
+| Servidor | VPS de Hostinger · Ubuntu 24.04.5 LTS · 1 vCPU · 3.8 GB RAM (+ 2 GB swap) · 48 GB disco |
+| IP pública | 179.197.91.34 (IPv6 `2a02:4780:95:c2c0::1`) |
+| DNS (Hostinger) | `A nodotec.tech → 179.197.91.34`, `AAAA → IPv6 del VPS`, `www` → `nodotec.tech` (ya estaban correctos) |
+| Software | Docker 29.9.2 + Docker Compose v5.6.1 (repositorio oficial), UFW 0.36, certbot 3.0.1 (imagen `certbot/certbot:v3.0.1`) |
+| Carpeta | `/opt/proyecto-ecommerce` (clon del repositorio de GitHub) |
+| Certificado | Let's Encrypt para `nodotec.tech` y `www.nodotec.tech`, válido hasta 28-ene-2027, renovación automática diaria (cron) |
+
+### Procedimiento (para la sección 14 del informe)
+1. Instalar Docker Engine y el plugin Compose desde el repositorio oficial de Docker.
+2. Firewall UFW: denegar entrada por defecto; permitir 22, 80 y 443 (IPv4 e IPv6).
+3. SSH: `/etc/ssh/sshd_config.d/01-nodotec.conf` con `PasswordAuthentication no`, `KbdInteractiveAuthentication no`, `PermitRootLogin prohibit-password` (va antes de `50-cloud-init.conf`, que traía `PasswordAuthentication yes`).
+4. `git clone` en `/opt/proyecto-ecommerce` y `.env` de producción (permisos 600) con claves nuevas generadas con `openssl rand` y `APP_URL=https://nodotec.tech`; las claves de las APIs externas (modo prueba/sandbox) se copiaron sin mostrarse.
+5. `docker compose up --build -d` con `NGINX_CONF=nginx.conf` (HTTP).
+6. `docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d nodotec.tech -d www.nodotec.tech` (reto HTTP-01).
+7. `NGINX_CONF=nginx-https.conf` y `docker compose up -d gateway`.
+8. Pruebas contra la URL pública.
+
+### Cambios en el código
+- `nginx/rutas.conf` (nuevo): todas las `location` del Gateway; lo incluyen `nginx.conf` (HTTP, local) y `nginx-https.conf` (nuevo, producción: 80 → 301 a HTTPS, `www` → dominio principal, TLS 1.2/1.3, HTTP/2).
+- `docker-compose.yml`: el Gateway publica también `${GATEWAY_HTTPS_PORT:-443}`; la configuración se elige con `${NGINX_CONF:-nginx.conf}`; volúmenes `./certbot/conf` y `./certbot/www`; servicio `certbot` con `profiles: ["certbot"]` (no arranca con `up`). Local sigue igual.
+- `.gitignore`: `certbot/`. `.env.example`: `NGINX_CONF`, `GATEWAY_HTTPS_PORT`.
+- `pruebas/ejecutar-pruebas.sh`: variable `GATEWAY` para probar contra la URL pública (por defecto `http://gateway`).
+- No hay rutas nuevas ni cambios en servicios, BD o frontend. PayPal usa la ventana del JS SDK (sin URL de retorno) y Stripe.js no necesita configuración por dominio; la única URL pública del sistema es `APP_URL`.
+
+### Evidencias (30-oct, contra https://nodotec.tech)
+- Batería completa (una sola ejecución, por el límite de EmailJS): **138 correctas, 0 con fallo** — bloque 1 41/41, bloque 2 15/15, bloque 4 16/16, Newman 48/48, tolerancia 18/18; `Slave_IO_Running: Yes`, `Slave_SQL_Running: Yes`, `Seconds_Behind_Master: 0`. Reporte: `docs/pruebas/produccion/reporte-pruebas.md`.
+- QR y enlace de seguimiento: `https://nodotec.tech/seguimiento.html?pedido=N`.
+- Redirecciones: `http://nodotec.tech/` → 301 `https://nodotec.tech/`; `https://www.nodotec.tech/…` → 301 `https://nodotec.tech/…`; `/api/auth/verify` → 403.
+- Navegador: tienda y panel cargan por HTTPS sin errores en consola; 14/14 imágenes de Cloudinary.
+- Puertos: solo `gateway` publica (80, 443); SSH con contraseña rechazado (`Permission denied (publickey)`).

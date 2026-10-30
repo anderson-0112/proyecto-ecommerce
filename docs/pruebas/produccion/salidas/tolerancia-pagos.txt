@@ -1,0 +1,8 @@
+
+== Tolerancia: pagos detenido ==
+  [OK]    El catálogo sigue respondiendo -> 200
+  [OK]    El login sigue funcionando -> 200
+  [OK]    Comprar -> 503 con mensaje claro
+  [OK]    El pedido queda guardado como "pendiente" (se puede reintentar, D2)
+
+Resultado: 4 correctas, 0 con fallo

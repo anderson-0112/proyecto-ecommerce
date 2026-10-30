@@ -1,0 +1,184 @@
+newman
+
+NodoTec — E-Commerce Distribuido
+
+❏ 1. Catálogo público (sin registro)
+↳ Listar productos (paginado)
+  GET https://nodotec.tech/api/catalogo/productos?pagina=1&por_pagina=12 [200 OK, 4.74kB, 208ms]
+  ✓  HTTP 200
+  ✓  20+ productos
+  ✓  Imágenes en Cloudinary
+
+↳ Filtrar por categoría y precio máximo
+  GET https://nodotec.tech/api/catalogo/productos?categoria=1&precio_max=750 [200 OK, 649B, 10ms]
+  ✓  HTTP 200
+  ✓  Respeta los filtros
+
+↳ Detalle de producto
+  GET https://nodotec.tech/api/catalogo/productos/1 [200 OK, 600B, 9ms]
+  ✓  HTTP 200
+
+↳ Producto inexistente
+  GET https://nodotec.tech/api/catalogo/productos/999999 [404 Not Found, 229B, 8ms]
+  ✓  HTTP 404
+
+↳ Destacados
+  GET https://nodotec.tech/api/catalogo/destacados [200 OK, 2.41kB, 6ms]
+  ✓  HTTP 200
+
+↳ Categorías
+  GET https://nodotec.tech/api/catalogo/categorias [200 OK, 786B, 6ms]
+  ✓  HTTP 200
+
+↳ Health catálogo (lecturas desde el Slave)
+  GET https://nodotec.tech/api/catalogo/health [200 OK, 285B, 7ms]
+  ✓  HTTP 200
+  ✓  Lee del Slave
+
+❏ 2. Autenticación (auth-service)
+↳ Registro de cliente
+  POST https://nodotec.tech/api/auth/register [201 Created, 302B, 67ms]
+  ✓  HTTP 201
+
+↳ Registro con correo repetido
+  POST https://nodotec.tech/api/auth/register [409 Conflict, 235B, 13ms]
+  ✓  HTTP 409
+
+↳ Login del comprador (guarda token_cliente)
+  POST https://nodotec.tech/api/auth/login [200 OK, 614B, 71ms]
+  ✓  HTTP 200
+  ✓  Token de 2 h
+
+↳ Login admin (guarda token_admin)
+  POST https://nodotec.tech/api/auth/login [200 OK, 569B, 59ms]
+  ✓  HTTP 200
+  ✓  Token de 8 h
+
+↳ Login con contraseña incorrecta
+  POST https://nodotec.tech/api/auth/login [401 Unauthorized, 234B, 60ms]
+  ✓  HTTP 401
+
+↳ Verify desde fuera (ruta interna bloqueada)
+  POST https://nodotec.tech/api/auth/verify [403 Forbidden, 210B, 4ms]
+  ✓  HTTP 403
+
+❏ 3. Catálogo — administración
+↳ Cliente intenta crear producto
+  POST https://nodotec.tech/api/catalogo/productos [403 Forbidden, 250B, 9ms]
+  ✓  HTTP 403
+
+↳ Admin crea producto
+  POST https://nodotec.tech/api/catalogo/productos [201 Created, 414B, 13ms]
+  ✓  HTTP 201
+
+↳ Admin actualiza precio
+  PUT https://nodotec.tech/api/catalogo/productos/23 [200 OK, 407B, 14ms]
+  ✓  HTTP 200
+  ✓  Precio nuevo
+
+↳ Admin elimina (baja lógica)
+  DELETE https://nodotec.tech/api/catalogo/productos/23 [204 No Content, 129B, 13ms]
+  ✓  HTTP 204
+
+❏ 4. Pedidos y pago con Stripe
+↳ Crear pedido sin token
+  POST https://nodotec.tech/api/pedidos [401 Unauthorized, 242B, 5ms]
+  ✓  HTTP 401
+
+↳ Stock insuficiente
+  POST https://nodotec.tech/api/pedidos [409 Conflict, 326B, 12ms]
+  ✓  HTTP 409
+
+↳ Comprar con tarjeta 4242 (pm_card_visa)
+  POST https://nodotec.tech/api/pedidos [201 Created, 1.04kB, 1665ms]
+  ✓  HTTP 201
+  ✓  Pedido pagado
+  ✓  Referencia de Stripe
+  ✓  QR generado
+
+↳ Ver el pedido (dueño)
+  GET https://nodotec.tech/api/pedidos/5 [200 OK, 746B, 9ms]
+  ✓  HTTP 200
+
+↳ Estado del pago
+  GET https://nodotec.tech/api/pagos/6/estado [200 OK, 379B, 14ms]
+  ✓  HTTP 200
+  ✓  Aprobado
+
+↳ Historial del cliente
+  GET https://nodotec.tech/api/pedidos [200 OK, 343B, 9ms]
+  ✓  HTTP 200
+
+↳ Cliente intenta cambiar el estado
+  PUT https://nodotec.tech/api/pedidos/5/estado [403 Forbidden, 250B, 8ms]
+  ✓  HTTP 403
+
+↳ Admin salta de pagado a entregado
+  PUT https://nodotec.tech/api/pedidos/5/estado [409 Conflict, 282B, 9ms]
+  ✓  HTTP 409
+
+↳ Admin pasa a preparando
+  PUT https://nodotec.tech/api/pedidos/5/estado [200 OK, 750B, 10ms]
+  ✓  HTTP 200
+
+↳ Ruta interna 'marcar pagado' desde fuera
+  PUT https://nodotec.tech/api/pedidos/interno/5/pagado [403 Forbidden, 210B, 3ms]
+  ✓  HTTP 403
+
+❏ 5. PayPal sandbox
+↳ Config pública de pagos
+  GET https://nodotec.tech/api/pagos/config [200 OK, 422B, 4ms]
+  ✓  HTTP 200
+  ✓  Client ID de PayPal sin secreto
+
+↳ Pedido con PayPal (crea la orden)
+  POST https://nodotec.tech/api/pedidos [202 Accepted, 879B, 925ms]
+  ✓  HTTP 202
+
+↳ Capturar sin aprobación del comprador
+  POST https://nodotec.tech/api/pagos/paypal [422 Unprocessable Entity, 485B, 925ms]
+  ✓  HTTP 422
+
+❏ 6. APIs del panel admin
+↳ Clima del día (admin)
+  GET https://nodotec.tech/api/pedidos/clima [200 OK, 440B, 9ms]
+  ✓  HTTP 200
+  ✓  Temperatura numérica
+
+↳ Clima (cliente)
+  GET https://nodotec.tech/api/pedidos/clima [403 Forbidden, 250B, 7ms]
+  ✓  HTTP 403
+
+↳ Reporte de pedidos desde una fecha (admin, Slave)
+  GET https://nodotec.tech/api/pedidos?desde=2026-01-01 [200 OK, 1.04kB, 9ms]
+  ✓  HTTP 200
+
+❏ 7. Cierre de sesión (Redis)
+↳ Logout
+  POST https://nodotec.tech/api/auth/logout [204 No Content, 129B, 7ms]
+  ✓  HTTP 204
+
+↳ Usar el token revocado
+  GET https://nodotec.tech/api/pedidos [401 Unauthorized, 236B, 7ms]
+  ✓  HTTP 401
+
+┌─────────────────────────┬────────────────────┬────────────────────┐
+│                         │           executed │             failed │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│              iterations │                  1 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│                requests │                 35 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│            test-scripts │                 35 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│      prerequest-scripts │                  1 │                  0 │
+├─────────────────────────┼────────────────────┼────────────────────┤
+│              assertions │                 48 │                  0 │
+├─────────────────────────┴────────────────────┴────────────────────┤
+│ total run duration: 4.9s                                          │
+├───────────────────────────────────────────────────────────────────┤
+│ total data received: 14.9kB (approx)                              │
+├───────────────────────────────────────────────────────────────────┤
+│ average response time: 120ms [min: 3ms, max: 1665ms, s.d.: 339ms] │
+└───────────────────────────────────────────────────────────────────┘
+Resultado: 48 correctas, 0 con fallo

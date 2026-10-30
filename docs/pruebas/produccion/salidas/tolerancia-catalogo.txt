@@ -1,0 +1,8 @@
+
+== Tolerancia: catalogo detenido ==
+  [OK]    El Gateway responde 503 en JSON (no se cae)
+  [OK]    Login sigue funcionando -> 200
+  [OK]    El historial de pedidos sigue funcionando -> 200
+  [OK]    Comprar -> 503 (no se puede verificar stock) sin crear el pedido
+
+Resultado: 4 correctas, 0 con fallo
