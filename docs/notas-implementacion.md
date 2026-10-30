@@ -1,6 +1,6 @@
-# Notas de implementación (para el informe)
+# Notas de implementación
 
-> Las mantiene Claude Code al cerrar cada bloque. El chat del Proyecto las convierte en texto del informe (secciones 9, 10, 11, 13, 14).
+> Detalle técnico de cada bloque: rutas finales, ejemplos JSON, códigos HTTP, versiones y procedimiento de despliegue.
 
 ## Bloque 0
 

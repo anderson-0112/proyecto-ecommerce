@@ -83,7 +83,7 @@ proyecto-ecommerce/
 ├── db/crear-usuarios.sh        # un usuario de BD por servicio
 ├── frontend/                   # tienda pública (index, login, checkout, mis-pedidos, seguimiento) + admin/
 ├── pruebas/                    # pruebas automáticas (ejecutar-pruebas.sh)
-└── docs/                       # enunciado, continuidad, diagramas, guía de defensa
+└── docs/                       # diagramas, notas de implementación, reportes de pruebas y créditos de imágenes
 ```
 
 Créditos de las imágenes de productos: [`docs/creditos-imagenes.md`](docs/creditos-imagenes.md).
