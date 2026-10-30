@@ -34,7 +34,7 @@
   [OK]    Referencia de Stripe guardada (pi_...)
   [OK]    QR de seguimiento generado
   [OK]    La respuesta informa del correo (correo_mensaje)
-  [OK]    Stock descontado (D20): 18 -> 16
+  [OK]    Stock descontado (D20): 13 -> 11
   [OK]    Dueño consulta su pedido -> 200
   [OK]    Otro cliente consulta el pedido -> 403 (D16)
   [OK]    GET /api/pagos/{id}/estado -> aprobado

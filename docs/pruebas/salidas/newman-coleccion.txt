@@ -1,0 +1,184 @@
+newman
+
+NodoTec — E-Commerce Distribuido
+
+❏ 1. Catálogo público (sin registro)
+↳ Listar productos (paginado)
+  GET http://gateway/api/catalogo/productos?pagina=1&por_pagina=12 [200 OK, 4.74kB, 62ms]
+  ✓  HTTP 200
+  ✓  20+ productos
+  ✓  Imágenes en Cloudinary
+
+↳ Filtrar por categoría y precio máximo
+  GET http://gateway/api/catalogo/productos?categoria=1&precio_max=750 [200 OK, 656B, 14ms]
+  ✓  HTTP 200
+  ✓  Respeta los filtros
+
+↳ Detalle de producto
+  GET http://gateway/api/catalogo/productos/1 [200 OK, 607B, 8ms]
+  ✓  HTTP 200
+
+↳ Producto inexistente
+  GET http://gateway/api/catalogo/productos/999999 [404 Not Found, 236B, 7ms]
+  ✓  HTTP 404
+
+↳ Destacados
+  GET http://gateway/api/catalogo/destacados [200 OK, 2.42kB, 7ms]
+  ✓  HTTP 200
+
+↳ Categorías
+  GET http://gateway/api/catalogo/categorias [200 OK, 794B, 6ms]
+  ✓  HTTP 200
+
+↳ Health catálogo (lecturas desde el Slave)
+  GET http://gateway/api/catalogo/health [200 OK, 292B, 5ms]
+  ✓  HTTP 200
+  ✓  Lee del Slave
+
+❏ 2. Autenticación (auth-service)
+↳ Registro de cliente
+  POST http://gateway/api/auth/register [201 Created, 310B, 59ms]
+  ✓  HTTP 201
+
+↳ Registro con correo repetido
+  POST http://gateway/api/auth/register [409 Conflict, 242B, 6ms]
+  ✓  HTTP 409
+
+↳ Login del comprador (guarda token_cliente)
+  POST http://gateway/api/auth/login [200 OK, 624B, 49ms]
+  ✓  HTTP 200
+  ✓  Token de 2 h
+
+↳ Login admin (guarda token_admin)
+  POST http://gateway/api/auth/login [200 OK, 576B, 49ms]
+  ✓  HTTP 200
+  ✓  Token de 8 h
+
+↳ Login con contraseña incorrecta
+  POST http://gateway/api/auth/login [401 Unauthorized, 241B, 49ms]
+  ✓  HTTP 401
+
+↳ Verify desde fuera (ruta interna bloqueada)
+  POST http://gateway/api/auth/verify [403 Forbidden, 217B, 3ms]
+  ✓  HTTP 403
+
+❏ 3. Catálogo — administración
+↳ Cliente intenta crear producto
+  POST http://gateway/api/catalogo/productos [403 Forbidden, 257B, 6ms]
+  ✓  HTTP 403
+
+↳ Admin crea producto
+  POST http://gateway/api/catalogo/productos [201 Created, 421B, 32ms]
+  ✓  HTTP 201
+
+↳ Admin actualiza precio
+  PUT http://gateway/api/catalogo/productos/37 [200 OK, 414B, 12ms]
+  ✓  HTTP 200
+  ✓  Precio nuevo
+
+↳ Admin elimina (baja lógica)
+  DELETE http://gateway/api/catalogo/productos/37 [204 No Content, 136B, 13ms]
+  ✓  HTTP 204
+
+❏ 4. Pedidos y pago con Stripe
+↳ Crear pedido sin token
+  POST http://gateway/api/pedidos [401 Unauthorized, 249B, 4ms]
+  ✓  HTTP 401
+
+↳ Stock insuficiente
+  POST http://gateway/api/pedidos [409 Conflict, 333B, 19ms]
+  ✓  HTTP 409
+
+↳ Comprar con tarjeta 4242 (pm_card_visa)
+  POST http://gateway/api/pedidos [201 Created, 1.05kB, 2s]
+  ✓  HTTP 201
+  ✓  Pedido pagado
+  ✓  Referencia de Stripe
+  ✓  QR generado
+
+↳ Ver el pedido (dueño)
+  GET http://gateway/api/pedidos/31 [200 OK, 753B, 7ms]
+  ✓  HTTP 200
+
+↳ Estado del pago
+  GET http://gateway/api/pagos/37/estado [200 OK, 388B, 10ms]
+  ✓  HTTP 200
+  ✓  Aprobado
+
+↳ Historial del cliente
+  GET http://gateway/api/pedidos [200 OK, 351B, 6ms]
+  ✓  HTTP 200
+
+↳ Cliente intenta cambiar el estado
+  PUT http://gateway/api/pedidos/31/estado [403 Forbidden, 257B, 5ms]
+  ✓  HTTP 403
+
+↳ Admin salta de pagado a entregado
+  PUT http://gateway/api/pedidos/31/estado [409 Conflict, 289B, 6ms]
+  ✓  HTTP 409
+
+↳ Admin pasa a preparando
+  PUT http://gateway/api/pedidos/31/estado [200 OK, 757B, 21ms]
+  ✓  HTTP 200
+
+↳ Ruta interna 'marcar pagado' desde fuera
+  PUT http://gateway/api/pedidos/interno/31/pagado [403 Forbidden, 217B, 3ms]
+  ✓  HTTP 403
+
+❏ 5. PayPal sandbox
+↳ Config pública de pagos
+  GET http://gateway/api/pagos/config [200 OK, 429B, 3ms]
+  ✓  HTTP 200
+  ✓  Client ID de PayPal sin secreto
+
+↳ Pedido con PayPal (crea la orden)
+  POST http://gateway/api/pedidos [202 Accepted, 891B, 1355ms]
+  ✓  HTTP 202
+
+↳ Capturar sin aprobación del comprador
+  POST http://gateway/api/pagos/paypal [422 Unprocessable Entity, 494B, 686ms]
+  ✓  HTTP 422
+
+❏ 6. APIs del panel admin
+↳ Clima del día (admin)
+  GET http://gateway/api/pedidos/clima [200 OK, 452B, 8ms]
+  ✓  HTTP 200
+  ✓  Temperatura numérica
+
+↳ Clima (cliente)
+  GET http://gateway/api/pedidos/clima [403 Forbidden, 257B, 4ms]
+  ✓  HTTP 403
+
+↳ Reporte de pedidos desde una fecha (admin, Slave)
+  GET http://gateway/api/pedidos?desde=2026-01-01 [200 OK, 4.62kB, 6ms]
+  ✓  HTTP 200
+
+❏ 7. Cierre de sesión (Redis)
+↳ Logout
+  POST http://gateway/api/auth/logout [204 No Content, 136B, 11ms]
+  ✓  HTTP 204
+
+↳ Usar el token revocado
+  GET http://gateway/api/pedidos [401 Unauthorized, 243B, 5ms]
+  ✓  HTTP 401
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │               35 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │               35 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │               48 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 5.2s                                      │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 18.49kB (approx)                         │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 132ms [min: 3ms, max: 2s, s.d.: 416ms] │
+└───────────────────────────────────────────────────────────────┘
+Resultado: 48 correctas, 0 con fallo

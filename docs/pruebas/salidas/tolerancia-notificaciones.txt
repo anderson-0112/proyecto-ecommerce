@@ -1,0 +1,7 @@
+
+== Tolerancia: notificaciones detenido ==
+  [OK]    El catálogo sigue respondiendo -> 200
+  [OK]    La compra termina igual -> 201 pagado (2.16 s)
+  [OK]    La respuesta avisa que el correo no se envió
+
+Resultado: 3 correctas, 0 con fallo

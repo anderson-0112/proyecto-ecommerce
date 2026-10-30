@@ -30,11 +30,11 @@ Pendiente: despliegue en VPS de Hostinger (Bloque 6).
    docker compose up --build -d
    ```
 3. Abrir la tienda en `http://localhost` y el panel de administración en `http://localhost/admin/`.
-4. Pruebas automáticas:
+4. Pruebas automáticas (todas, con tolerancia a fallos; en Windows usar Git Bash):
    ```bash
-   docker run --rm --network ecommerce -v "${PWD}/pruebas:/pruebas" php:8.3-apache php /pruebas/prueba-bloque1.php
-   docker run --rm --network ecommerce -v "${PWD}/pruebas:/pruebas" php:8.3-apache php /pruebas/prueba-bloque2.php
+   bash pruebas/ejecutar-pruebas.sh
    ```
+   Reporte en [`docs/pruebas/reporte-pruebas.md`](docs/pruebas/reporte-pruebas.md); colección Postman en `docs/pruebas/NodoTec.postman_collection.json`.
 5. Ver la replicación: `docker exec -it mariadb-slave mariadb -uroot -p -e "SHOW SLAVE STATUS\G"`.
 
 Las URLs entre servicios y los datos de conexión a la BD son variables de entorno con los valores de Docker por defecto (ver `docker-compose.yml` y `.env.example`); el mismo archivo se usa en local y en el VPS.
@@ -65,7 +65,7 @@ proyecto-ecommerce/
 ├── db/init-master.sql          # esquema + 20 productos + usuarios semilla
 ├── db/crear-usuarios.sh        # un usuario de BD por servicio
 ├── frontend/                   # tienda pública (index, login, checkout, mis-pedidos, seguimiento) + admin/
-├── pruebas/                    # pruebas automáticas
+├── pruebas/                    # pruebas automáticas (ejecutar-pruebas.sh)
 └── docs/                       # enunciado, continuidad, diagramas, guía de defensa
 ```
 

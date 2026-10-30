@@ -162,3 +162,32 @@ Tienda `http://localhost/` → agregar productos → Ir a pagar → login `clien
 
 ### Demo PayPal
 Checkout → "PayPal" → botón amarillo → iniciar sesión con la cuenta compradora sandbox → "Completar compra" → confirmación "pagado" con QR.
+
+## Bloque 5 — Pruebas
+
+- **Un solo comando** (Git Bash en Windows o Linux en el VPS):
+  ```bash
+  bash pruebas/ejecutar-pruebas.sh
+  ```
+  Corre las pruebas de los bloques 1, 2 y 4, la colección Postman con Newman, revisa `SHOW SLAVE STATUS` y ejecuta 5 escenarios de **tolerancia a fallos** deteniendo un contenedor a la vez. Escribe `docs/pruebas/reporte-pruebas.md` y las salidas en `docs/pruebas/salidas/`. Resultado actual: **138 correctas, 0 con fallo**.
+- **¿Por qué en contenedores?** Las pruebas se ejecutan en `php:8.3-apache` (y Newman en `postman/newman`) conectados a la red `ecommerce`: no hace falta instalar PHP ni Node en el equipo, y prueban el sistema a través del Gateway, igual que un navegador.
+- **Tolerancia demostrada (criterio 10):**
+
+  | Contenedor detenido | Qué sigue funcionando | Qué responde lo afectado |
+  |---|---|---|
+  | notificaciones-service | Catálogo y compra completa (`pagado`) | "No se pudo enviar el correo: servicio de notificaciones no disponible" |
+  | pagos-service | Catálogo, login | 503 y el pedido queda `pendiente` para reintentar |
+  | catalogo-service | Login, historial de pedidos | Gateway 503 en JSON; no se crea el pedido |
+  | mariadb-slave | Catálogo (lee del Master) y compras | — |
+  | redis | Catálogo sin caché (`X-Cache: SIN-REDIS`), login y compras | Logout 503 |
+- **Colección Postman/Thunder Client:** `docs/pruebas/NodoTec.postman_collection.json`. Importarla, dejar `base_url = http://localhost` (o la URL del VPS) y ejecutar en orden: guarda sola los tokens e ids.
+- **Correos en las pruebas:** los compradores automáticos usan `@example.com` (dominio reservado para pruebas) para no escribir a buzones reales.
+
+### Demo de tolerancia (en vivo)
+```bash
+docker compose stop notificaciones-service
+```
+Hacer una compra en la tienda: termina en `pagado` y avisa que el correo no se envió. Luego:
+```bash
+docker compose start notificaciones-service
+```

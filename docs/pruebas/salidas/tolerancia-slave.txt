@@ -1,0 +1,7 @@
+
+== Tolerancia: slave detenido ==
+  [OK]    catalogo-service lee del Master
+  [OK]    El catálogo sigue respondiendo -> 200 (0.01 s)
+  [OK]    La compra termina -> 201 pagado
+
+Resultado: 3 correctas, 0 con fallo

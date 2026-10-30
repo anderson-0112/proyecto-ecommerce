@@ -92,7 +92,7 @@ Pendiente de bloques siguientes: `POST /api/auth/logout` (Bloque 2), `POST /api/
 - Imágenes: Wikimedia Commons (licencias libres, `docs/creditos-imagenes.md`); migración a Cloudinary en el Bloque 4.
 
 ### Evidencias de prueba
-- `pruebas/prueba-bloque1.php` → `pruebas/resultado-bloque1.txt`: **41 correctas, 0 con fallo** (30-oct).
+- `pruebas/prueba-bloque1.php` → `docs/pruebas/salidas/bloque1-nucleo.txt`: **41 correctas, 0 con fallo** (30-oct).
 - Compra manual en `http://localhost/prueba-compra.html` con 4242 4242 4242 4242 · 12/29 · 123 → pedido #5 `pagado`, pago `aprobado` con `pi_…`, stock del iPhone 15 de 15 a 14.
 - Tolerancia: con `notificaciones-service` detenido, la compra respondió 201, pedido `pagado`, `correo_enviado: false` y el mensaje "No se pudo enviar el correo: servicio de notificaciones no disponible" (≈ 4 s).
 
@@ -112,7 +112,7 @@ gateway, auth-service, catalogo-service, pedidos-service, pagos-service, notific
 - Master: `--server-id=1 --log-bin=mysql-bin --binlog-format=ROW`; usuario `replicador` con `REPLICATION REPLICA` (variables `MARIADB_REPLICATION_USER/PASSWORD`).
 - Slave: `--server-id=2 --read-only=1 --relay-log=relay-bin`; `MARIADB_MASTER_HOST=mariadb-master`. Replica desde el inicio del binlog (incluye esquema, datos semilla y usuarios de servicio).
 - Lecturas desde el Slave: catalogo-service (todas las lecturas públicas) y `GET /api/pedidos` cuando lo consulta un admin (reportes, D9). Verificar y descontar stock se hace en el Master.
-- Evidencia: `SHOW SLAVE STATUS` → `Slave_IO_Running: Yes`, `Slave_SQL_Running: Yes`, `Seconds_Behind_Master: 0`; producto creado en el Master visible en el Slave en ≈ 0.01 s (`pruebas/resultado-bloque2.txt`).
+- Evidencia: `SHOW SLAVE STATUS` → `Slave_IO_Running: Yes`, `Slave_SQL_Running: Yes`, `Seconds_Behind_Master: 0`; producto creado en el Master visible en el Slave en ≈ 0.01 s (`docs/pruebas/salidas/bloque2-replicacion-redis.txt`).
 - Si el Slave cae: lectura desde el Master (≈ 1 s la primera petición, luego ≈ 0.01 s gracias a la marca `caido:<host>` en Redis, 15 s).
 
 ### Redis
@@ -202,3 +202,19 @@ Variables: `to_email`, `cliente_nombre`, `pedido_id`, `total` (`US$ 99.00`), `en
 - Navegador: compra con PayPal sandbox (cuenta compradora de prueba) → pedido #12 `pagado`, pago `aprobado` con `referencia_paypal`, "Correo de confirmación enviado"; dashboard con clima; subida de imagen desde el formulario de producto → URL de Cloudinary.
 - Regresión: bloque 1 41/41, bloque 2 15/15.
 - Las pruebas automáticas compran con usuarios `@example.com` (dominio reservado para pruebas, RFC 2606) para no enviar correos a `test.com`, que es un dominio real.
+
+## Bloque 5 — Pruebas (30-oct-2026)
+
+| Conjunto | Archivo | Correctas | Fallos |
+|---|---|---|---|
+| Núcleo, JWT, permisos, compra Stripe | `pruebas/prueba-bloque1.php` | 41 | 0 |
+| Replicación, caché Redis, logout | `pruebas/prueba-bloque2.php` | 15 | 0 |
+| APIs externas | `pruebas/prueba-bloque4.php` | 16 | 0 |
+| Colección Postman (Newman 6, 35 peticiones) | `docs/pruebas/NodoTec.postman_collection.json` | 48 | 0 |
+| Tolerancia (5 escenarios) | `pruebas/prueba-tolerancia.php` | 18 | 0 |
+| **Total** | `pruebas/ejecutar-pruebas.sh` | **138** | **0** |
+
+- Reporte: `docs/pruebas/reporte-pruebas.md`; salidas completas: `docs/pruebas/salidas/` (incluye `replicacion-estado.txt` con `SHOW SLAVE STATUS`).
+- Herramientas: contenedores `php:8.3-apache`, `postman/newman:6-alpine`, `curlimages/curl:8.10.1` (espera entre escenarios).
+- Tiempos medidos en tolerancia: compra con notificaciones caído ≈ 1–4 s; catálogo con Slave caído ≈ 1 s la primera petición, luego normal.
+- No automatizable (probado a mano en el navegador): tarjeta 4242 escrita en Stripe Elements y aprobación en la ventana de PayPal sandbox.
