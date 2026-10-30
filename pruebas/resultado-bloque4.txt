@@ -1,0 +1,27 @@
+
+== OpenWeatherMap (clima del dashboard) ==
+  [OK]    Admin consulta el clima -> 200 con temperatura
+          Santa Cruz del Quiché: 21.9 °C, nubes dispersas
+  [OK]    Cliente consulta el clima -> 403
+
+== Cloudinary (imágenes) ==
+  [OK]    Las imágenes del catálogo se sirven desde Cloudinary (20/20)
+  [OK]    La imagen del CDN responde 200 (image/jpeg)
+  [OK]    Admin sube una imagen -> 201 con URL de Cloudinary
+  [OK]    Cliente sube una imagen -> 403
+  [OK]    Archivo que no es imagen (aunque diga .png) -> 422
+
+== EmailJS (correo de confirmación) y QR ==
+  [OK]    Compra con Stripe -> 201 pagado
+  [OK]    Correo enviado con EmailJS (correo_enviado = true)
+  [OK]    QR de api.qrserver.com responde una imagen
+
+== PayPal Sandbox ==
+  [OK]    GET /api/pagos/config publica el Client ID de PayPal (no el secreto)
+  [OK]    Pedido con PayPal -> 202 con id de orden
+  [OK]    El pedido queda "pendiente" hasta que el comprador apruebe
+  [OK]    Capturar sin aprobación del comprador -> 422 (no se cobra)
+  [OK]    Orden que no corresponde al pedido -> 404
+  [OK]    Otro cliente intenta pagar el pedido -> 403
+
+Resultado: 16 correctas, 0 con fallo

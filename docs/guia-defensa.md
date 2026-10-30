@@ -135,3 +135,30 @@ Archivos comunes: `js/api.js` (llamadas al API con el JWT, carrito, formato, `es
 
 ### Demo (Bloque 3)
 Tienda `http://localhost/` → agregar productos → Ir a pagar → login `cliente@test.com / Test2026!` → tarjeta 4242 4242 4242 4242 · 12/29 · 123 → confirmación con QR → Ver seguimiento. Admin `http://localhost/admin/` con `admin@mitienda.com / Admin2026!` → dashboard → Pedidos → Ver → "Pasar a preparando" → Contactar al cliente → Productos → editar → Exportar PDF.
+
+## Bloque 4 — APIs externas
+
+| API | Dónde | Cómo se integra | Dónde se ve |
+|---|---|---|---|
+| **Stripe** | pagos-service (`src/stripe.php`) + Stripe.js | El navegador tokeniza la tarjeta (`pm_…`); el servidor crea y confirma un PaymentIntent con la clave secreta | Checkout → "Tarjeta" |
+| **PayPal Sandbox** | pagos-service (`src/paypal.php`) + SDK JS de PayPal | OAuth (Client ID + Secret → token); **dos pasos**: crear orden (servidor) → el comprador aprueba en la ventana de PayPal → capturar (servidor) | Checkout → "PayPal" |
+| **EmailJS** | notificaciones-service | API REST `POST https://api.emailjs.com/api/v1.0/email/send` con `service_id`, `template_id`, `user_id` (Public Key), `accessToken` (Private Key) y las variables de la plantilla | Correo al cliente; la confirmación dice "Correo de confirmación enviado" |
+| **Cloudinary** | catalogo-service (`src/cloudinary.php`) | Subida **firmada**: `signature = SHA1(parámetros ordenados + API_SECRET)`; la URL entregada usa `f_auto,q_auto,w_600` | Todas las fotos de la tienda; admin → producto → "Imagen" |
+| **OpenWeatherMap** | pedidos-service (`GET /api/pedidos/clima`) | `GET /data/2.5/weather?lat&lon&units=metric&lang=es`; respuesta guardada 10 min en un archivo temporal | Dashboard admin (tarjeta de clima) |
+| **QR Code API** | pedidos-service | URL `https://api.qrserver.com/v1/create-qr-code/?data=<enlace de seguimiento>` | Confirmación de compra, seguimiento, detalle admin |
+
+### Puntos para explicar
+- **Ningún secreto llega al navegador.** El navegador solo recibe datos públicos (`GET /api/pagos/config`: clave publicable de Stripe y Client ID de PayPal). Clave secreta de Stripe, secreto de PayPal, Private Key de EmailJS, secreto de Cloudinary y la key de OpenWeather viven en `.env` y solo los usan los servicios.
+- **PayPal y el diagrama de secuencia:** `POST /api/pedidos` con `metodo_pago: "paypal"` → pedidos verifica stock, crea el pedido y **llama a pagos** (`POST /api/pagos/paypal`), que crea la orden (202 + `paypal_orden_id`). El SDK abre la ventana; cuando el comprador aprueba, el navegador llama `POST /api/pagos/paypal` con `orden_id` y pagos **captura**; después, igual que con Stripe: pedido `pagado`, stock descontado, correo. Sin aprobación PayPal responde `ORDER_NOT_APPROVED` y no se cobra (422).
+- **Idempotencia:** `PayPal-Request-Id` (PayPal) e `Idempotency-Key` (Stripe) evitan cobrar dos veces si una petición se repite.
+- **Correo y tolerancia (D15):** EmailJS tiene 2.5 s de timeout y pagos espera máximo 3 s a notificaciones. Si EmailJS o notificaciones fallan, la compra termina igual y la respuesta lo dice.
+- **Cloudinary:** las 20 fotos (Wikimedia Commons, licencias libres) se subieron con `src/migrar-imagenes-cloudinary.php` y `db/init-master.sql` ya trae las URLs del CDN. Al subir una imagen nueva, el servidor revisa el **contenido real** (`finfo`), no la extensión, y limita a 5 MB.
+- **Clima:** ciudad configurable en `.env` (`CLIMA_CIUDAD`, `CLIMA_LAT`, `CLIMA_LON`); solo el admin lo consulta (403 para clientes). La caché de 10 min cuida el límite gratuito.
+
+### Preguntas probables (Bloque 4)
+1. **¿Por qué EmailJS desde el servidor y no desde el navegador?** Para que la Private Key no quede expuesta y para que el correo dependa del pago confirmado, no de lo que haga el navegador.
+2. **¿Qué pasa si el comprador cierra la ventana de PayPal?** El pedido queda `pendiente` y la página ofrece reintentar sobre el mismo pedido.
+3. **¿Cómo sabe Cloudinary que la subida es nuestra?** Por la firma SHA-1 calculada con el API Secret; sin el secreto no se puede generar.
+
+### Demo PayPal
+Checkout → "PayPal" → botón amarillo → iniciar sesión con la cuenta compradora sandbox → "Completar compra" → confirmación "pagado" con QR.

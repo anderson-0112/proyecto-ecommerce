@@ -26,12 +26,24 @@
             <div class="col-sm-7"><input id="ciudad" class="form-control" placeholder="Ciudad" required minlength="2" autocomplete="address-level2"></div>
             <div class="col-sm-5"><input id="telefono" class="form-control" placeholder="Teléfono" autocomplete="tel"></div>
           </div>
-          <h2 class="h6">2. Pago con tarjeta</h2>
-          <!-- Stripe Elements: el número de tarjeta se escribe en un campo de Stripe y nunca pasa por NodoTec -->
-          <div id="tarjeta"></div>
-          <div class="form-text"><i class="bi bi-shield-lock"></i> Pago de prueba con Stripe. Tarjeta: 4242 4242 4242 4242 · 12/29 · 123</div>
+          <h2 class="h6">2. Método de pago</h2>
+          <div class="btn-group w-100 mb-3" role="group" aria-label="Método de pago">
+            <input type="radio" class="btn-check" name="metodo" id="metodoTarjeta" value="stripe" checked>
+            <label class="btn btn-outline-primary" for="metodoTarjeta"><i class="bi bi-credit-card"></i> Tarjeta</label>
+            <input type="radio" class="btn-check" name="metodo" id="metodoPaypal" value="paypal">
+            <label class="btn btn-outline-primary" for="metodoPaypal"><i class="bi bi-paypal"></i> PayPal</label>
+          </div>
+          <div id="pagoTarjeta">
+            <!-- Stripe Elements: el número de tarjeta se escribe en un campo de Stripe y nunca pasa por NodoTec -->
+            <div id="tarjeta"></div>
+            <div class="form-text"><i class="bi bi-shield-lock"></i> Pago de prueba con Stripe. Tarjeta: 4242 4242 4242 4242 · 12/29 · 123</div>
+            <button id="btnPagar" class="btn btn-nodotec btn-lg w-100 mt-3">Pagar</button>
+          </div>
+          <div id="pagoPaypal" class="d-none">
+            <div id="botonesPaypal"></div>
+            <div class="form-text"><i class="bi bi-shield-lock"></i> PayPal Sandbox: inicia sesión con la cuenta compradora de prueba.</div>
+          </div>
           <div id="error" class="alert alert-danger mt-3 d-none"></div>
-          <button id="btnPagar" class="btn btn-nodotec btn-lg w-100 mt-3">Pagar</button>
         </div>
       </form>
     </div>

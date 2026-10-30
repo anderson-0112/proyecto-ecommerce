@@ -55,7 +55,7 @@ $r = http('GET', '/api/catalogo/productos/999999');
 comprobar('Producto inexistente -> 404', $r['codigo'] === 404, $r);
 
 echo "\n== Autenticación ==\n";
-$correo = 'prueba' . time() . '@test.com';
+$correo = 'prueba' . time() . '@example.com'; // example.com: dominio reservado para pruebas (RFC 2606); los correos de confirmación no llegan a nadie
 $r = http('POST', '/api/auth/register', ['nombre' => 'Usuario Prueba', 'email' => $correo, 'password' => 'Prueba2026!']);
 comprobar('Registro -> 201', $r['codigo'] === 201, $r);
 $r = http('POST', '/api/auth/register', ['nombre' => 'Usuario Prueba', 'email' => $correo, 'password' => 'Prueba2026!']);
@@ -66,12 +66,12 @@ $r = http('POST', '/api/auth/login', ['email' => 'cliente@test.com', 'password' 
 comprobar('Contraseña incorrecta -> 401', $r['codigo'] === 401, $r);
 $r = http('POST', '/api/auth/login', ['email' => 'cliente@test.com', 'password' => 'Test2026!']);
 comprobar('Login cliente -> 200 + JWT (2 h)', $r['codigo'] === 200 && $r['datos']['expira_en'] === 7200, $r);
-$tokenCliente = $r['datos']['token'] ?? '';
+$tokenOtro = $r['datos']['token'] ?? '';
 $r = http('POST', '/api/auth/login', ['email' => 'admin@mitienda.com', 'password' => 'Admin2026!']);
 comprobar('Login admin -> 200 + JWT (8 h)', $r['codigo'] === 200 && $r['datos']['expira_en'] === 28800, $r);
 $tokenAdmin = $r['datos']['token'] ?? '';
 $r = http('POST', '/api/auth/login', ['email' => $correo, 'password' => 'Prueba2026!']);
-$tokenOtro = $r['datos']['token'] ?? '';
+$tokenCliente = $r['datos']['token'] ?? '';
 $r = http('POST', '/api/auth/verify', null, $tokenCliente);
 comprobar('/api/auth/verify bloqueado desde el Gateway -> 403', $r['codigo'] === 403, $r);
 

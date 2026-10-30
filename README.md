@@ -12,17 +12,19 @@ Proyecto Final No. 2 — Desarrollo de Aplicaciones Web (PHP, MySQL y Aplicacion
 | `auth-service` | 8081 | Registro, login, JWT (2 h cliente / 8 h admin), verificación |
 | `catalogo-service` | 8082 | Productos, categorías, filtros, paginación, stock, CRUD admin |
 | `pedidos-service` | 8083 | Pedidos, estados, historial, QR de seguimiento |
-| `pagos-service` | 8084 | Cobro con Stripe, estado de pagos |
-| `notificaciones-service` | 8085 | Confirmación de pedido (correo real con EmailJS en el Bloque 4) |
+| `pagos-service` | 8084 | Cobro con Stripe y PayPal (sandbox), estado de pagos |
+| `notificaciones-service` | 8085 | Correo de confirmación con EmailJS |
 | `mariadb-master` (MariaDB 10.6) | 3306 | Escrituras. `auth_db`, `catalogo_db`, `pedidos_db`, `pagos_db` (aisladas) |
 | `mariadb-slave` (MariaDB 10.6) | 3306 | Réplica de solo lectura: catálogo y reportes del admin |
 | `redis` (Redis 7) | 6379 | Caché del catálogo y tokens JWT revocados (logout) |
 
-Pendiente: PayPal, EmailJS, Cloudinary, OpenWeatherMap (Bloque 4), despliegue en VPS de Hostinger (Bloque 6).
+APIs externas: Stripe, PayPal Sandbox, EmailJS, Cloudinary, OpenWeatherMap y QR Code API (api.qrserver.com).
+
+Pendiente: despliegue en VPS de Hostinger (Bloque 6).
 
 ## Puesta en marcha
 
-1. Copiar `.env.example` a `.env` y completar los valores (claves de Stripe **de prueba**).
+1. Copiar `.env.example` a `.env` y completar los valores (Stripe y PayPal **de prueba/sandbox**, EmailJS, Cloudinary, OpenWeatherMap).
 2. Levantar todo:
    ```bash
    docker compose up --build -d

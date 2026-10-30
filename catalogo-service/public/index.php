@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../src/lib.php';
+require __DIR__ . '/../src/cloudinary.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 $ruta   = rutaActual();
@@ -289,6 +290,29 @@ if ($metodo === 'DELETE' && preg_match('#^/api/catalogo/productos/(\d+)$#', $rut
     }
     invalidarCache();
     responder(204);
+}
+
+// ---------- POST /api/catalogo/imagenes (solo admin) — sube una foto a Cloudinary ----------
+// Formulario multipart con el campo "imagen". Devuelve la URL del CDN para guardarla en el producto.
+if ($metodo === 'POST' && $ruta === '/api/catalogo/imagenes') {
+    requiereAdmin(usuarioAutenticado());
+    $archivo = $_FILES['imagen'] ?? null;
+    if (!$archivo || $archivo['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($archivo['tmp_name'])) {
+        error(422, 'Adjunte una imagen en el campo "imagen"');
+    }
+    if ($archivo['size'] > 5 * 1024 * 1024) {
+        error(422, 'La imagen no puede pesar más de 5 MB');
+    }
+    // Se revisa el contenido real del archivo, no la extensión que envió el navegador
+    $tipo = (new finfo(FILEINFO_MIME_TYPE))->file($archivo['tmp_name']);
+    if (!in_array($tipo, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true)) {
+        error(422, 'Formato no permitido (use JPG, PNG, WEBP o GIF)');
+    }
+    $url = cloudinarySubir($archivo['tmp_name']);
+    if ($url === null) {
+        error(503, 'No se pudo subir la imagen a Cloudinary');
+    }
+    responder(201, ['imagen_url' => $url]);
 }
 
 // ---------- POST /api/catalogo/interno/verificar-stock (lo llama pedidos-service) ----------

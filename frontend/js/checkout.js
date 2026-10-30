@@ -4,6 +4,8 @@
  * 2) POST /api/pedidos con productos + dirección + pm_...: pedidos-service verifica stock,
  *    crea el pedido y llama a pagos-service, que cobra con Stripe.
  * 3) Si el banco pide 3D Secure (202), se resuelve aquí y se confirma con POST /api/pagos/stripe.
+ * PayPal: POST /api/pedidos con metodo_pago "paypal" crea el pedido y la orden (202);
+ * el comprador la aprueba en la ventana de PayPal y luego POST /api/pagos/paypal la captura.
  */
 let stripe, tarjeta;
 let pedidoPendiente = null; // si el pago fue rechazado, se reintenta sobre el mismo pedido (D2)
@@ -35,6 +37,70 @@ function mostrarConfirmacion(pedido, correoMensaje) {
   document.getElementById('linkSeguimiento').href = '/seguimiento.html?pedido=' + pedido.id;
 }
 
+/** Cuerpo de POST /api/pedidos: productos del carrito + dirección + datos del método de pago. */
+function datosPedido(metodo, extra = {}) {
+  return {
+    items: leerCarrito().map(i => ({ id_producto: i.id, cantidad: i.cantidad })),
+    metodo_pago: metodo,
+    ...extra,
+    direccion: {
+      direccion: document.getElementById('direccion').value,
+      ciudad: document.getElementById('ciudad').value,
+      telefono: document.getElementById('telefono').value,
+    },
+  };
+}
+
+/** Muestra el motivo de una compra que no terminó (stock, rechazo, servicio caído…). */
+function mostrarFallo(r) {
+  if (r.codigo === 401) { location.href = '/login.html?volver=/checkout.html'; return; }
+  if (r.codigo === 409 && r.datos?.sin_stock) { // D3: vuelve al carrito con el aviso
+    mostrarError('Stock insuficiente: ' + r.datos.sin_stock.map(s => `${s.nombre} (disponibles: ${s.disponible})`).join(', ') + '. Ajusta tu carrito.');
+    bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('carrito')).show();
+    return;
+  }
+  const extra = r.datos?.campos ? ' ' + Object.values(r.datos.campos).join('. ') : '';
+  const pendiente = pedidoPendiente ? ` Tu pedido #${pedidoPendiente.id} quedó pendiente: puedes intentar de nuevo.` : '';
+  mostrarError((r.datos?.error || 'No se pudo completar la compra.') + extra + pendiente);
+}
+
+/* ---------------- PayPal (SDK de JavaScript, botones) ---------------- */
+function cargarPaypal(clientId) {
+  const script = document.createElement('script');
+  // disable-funding: las tarjetas se cobran con Stripe; aquí solo el botón de PayPal
+  script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&disable-funding=card,credit,paylater`;
+  script.onload = () => paypal.Buttons({
+    style: { layout: 'horizontal', label: 'pay', tagline: false },
+    // Paso 1: NodoTec crea el pedido y la orden de PayPal; el SDK abre la ventana de aprobación
+    createOrder: async () => {
+      document.getElementById('error').classList.add('d-none');
+      if (!document.getElementById('formPago').reportValidity()) throw new Error('Faltan datos de entrega');
+      let r;
+      if (pedidoPendiente) {
+        r = await api('POST', '/api/pagos/paypal', { id_pedido: pedidoPendiente.id });
+      } else {
+        r = await api('POST', '/api/pedidos', datosPedido('paypal'));
+        if (r.datos?.pedido) pedidoPendiente = r.datos.pedido;
+      }
+      if (r.codigo !== 202) { mostrarFallo(r); throw new Error('No se creó la orden'); }
+      return r.datos.paypal_orden_id;
+    },
+    // Paso 2: el comprador aprobó; NodoTec captura el pago
+    onApprove: async (data) => {
+      const r = await api('POST', '/api/pagos/paypal', { id_pedido: pedidoPendiente.id, orden_id: data.orderID });
+      if (r.codigo !== 200) { mostrarFallo(r); return; }
+      const pedido = (await api('GET', '/api/pedidos/' + pedidoPendiente.id)).datos.pedido;
+      mostrarConfirmacion(pedido, r.datos.correo_mensaje);
+    },
+    onCancel: () => mostrarError(`Pago con PayPal cancelado. Tu pedido #${pedidoPendiente?.id} quedó pendiente.`),
+    onError: (err) => {
+      console.error(err);
+      if (document.getElementById('error').classList.contains('d-none')) mostrarError('PayPal no pudo procesar el pago.');
+    },
+  }).render('#botonesPaypal');
+  document.head.appendChild(script);
+}
+
 async function pagar(e) {
   e.preventDefault();
   document.getElementById('error').classList.add('d-none');
@@ -50,16 +116,7 @@ async function pagar(e) {
       // Reintento: el pedido ya existe; solo se vuelve a cobrar con la nueva tarjeta
       r = await api('POST', '/api/pagos/stripe', { id_pedido: pedidoPendiente.id, payment_method_id: paymentMethod.id });
       r.datos = { pedido: pedidoPendiente, ...r.datos };
-    } else r = await api('POST', '/api/pedidos', {
-      items: leerCarrito().map(i => ({ id_producto: i.id, cantidad: i.cantidad })),
-      metodo_pago: 'stripe',
-      payment_method_id: paymentMethod.id,
-      direccion: {
-        direccion: document.getElementById('direccion').value,
-        ciudad: document.getElementById('ciudad').value,
-        telefono: document.getElementById('telefono').value,
-      },
-    });
+    } else r = await api('POST', '/api/pedidos', datosPedido('stripe', { payment_method_id: paymentMethod.id }));
     let pedido = r.datos?.pedido;
     if (pedido?.estado === 'pendiente') pedidoPendiente = pedido;
 
@@ -74,15 +131,7 @@ async function pagar(e) {
       pedido = (await api('GET', '/api/pedidos/' + pedido.id)).datos.pedido;
     }
     if (r.codigo === 201 || r.codigo === 200) { mostrarConfirmacion(pedido, r.datos.correo_mensaje); return; }
-    if (r.codigo === 401) { location.href = '/login.html?volver=/checkout.html'; return; }
-    if (r.codigo === 409 && r.datos?.sin_stock) { // D3: vuelve al carrito con el aviso
-      mostrarError('Stock insuficiente: ' + r.datos.sin_stock.map(s => `${s.nombre} (disponibles: ${s.disponible})`).join(', ') + '. Ajusta tu carrito.');
-      bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('carrito')).show();
-      return;
-    }
-    const extra = r.datos?.campos ? ' ' + Object.values(r.datos.campos).join('. ') : '';
-    const pendiente = pedidoPendiente ? ` Tu pedido #${pedidoPendiente.id} quedó pendiente: puedes intentar con otra tarjeta.` : '';
-    mostrarError((r.datos?.error || 'No se pudo completar la compra.') + extra + pendiente);
+    mostrarFallo(r);
   } finally {
     boton.disabled = false;
     boton.textContent = 'Pagar';
@@ -95,10 +144,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   pintarResumen();
   document.addEventListener('carrito', pintarResumen);
 
-  const { codigo, datos } = await api('GET', '/api/pagos/config'); // clave PÚBLICA de Stripe
+  const { codigo, datos } = await api('GET', '/api/pagos/config'); // datos PÚBLICOS de Stripe y PayPal
   if (codigo !== 200) { mostrarError('El servicio de pagos no está disponible. Intenta más tarde.'); return; }
   stripe = Stripe(datos.stripe_public_key);
   tarjeta = stripe.elements().create('card', { hidePostalCode: true });
   tarjeta.mount('#tarjeta');
   document.getElementById('formPago').addEventListener('submit', pagar);
+  if (datos.paypal_client_id) cargarPaypal(datos.paypal_client_id);
+
+  // Cambiar entre tarjeta (Stripe) y PayPal
+  document.querySelectorAll('input[name="metodo"]').forEach(radio => radio.addEventListener('change', () => {
+    const esPaypal = document.getElementById('metodoPaypal').checked;
+    document.getElementById('pagoTarjeta').classList.toggle('d-none', esPaypal);
+    document.getElementById('pagoPaypal').classList.toggle('d-none', !esPaypal);
+    document.getElementById('error').classList.add('d-none');
+  }));
 });

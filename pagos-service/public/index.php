@@ -1,6 +1,6 @@
 <?php
 /**
- * pagos-service (puerto 8084) — cobro con Stripe (modo prueba) y estado de pagos.
+ * pagos-service (puerto 8084) — cobro con Stripe y PayPal (modo prueba/sandbox) y estado de pagos.
  * Base de datos: pagos_db (tabla pagos).
  *
  * Llamadas a otros servicios (reenviando el JWT del usuario):
@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../src/lib.php';
 require __DIR__ . '/../src/stripe.php';
+require __DIR__ . '/../src/paypal.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 $ruta   = rutaActual();
@@ -80,9 +81,10 @@ if ($metodo === 'GET' && in_array($ruta, ['/health', '/api/pagos/health'], true)
     responder(200, ['servicio' => 'pagos-service', 'estado' => 'ok']);
 }
 
-// ---------- GET /api/pagos/config — clave PÚBLICA de Stripe para Stripe.js ----------
+// ---------- GET /api/pagos/config — datos públicos para Stripe.js y el SDK de PayPal ----------
 if ($metodo === 'GET' && $ruta === '/api/pagos/config') {
-    responder(200, ['stripe_public_key' => getenv('STRIPE_PUBLIC_KEY')]);
+    // Solo datos PÚBLICOS: clave publicable de Stripe y Client ID de PayPal (los secretos no salen)
+    responder(200, ['stripe_public_key' => getenv('STRIPE_PUBLIC_KEY'), 'paypal_client_id' => getenv('PAYPAL_CLIENT_ID')]);
 }
 
 // ---------- POST /api/pagos/stripe ----------
@@ -161,6 +163,72 @@ if ($metodo === 'POST' && $ruta === '/api/pagos/stripe') {
     }
 
     responder(200, ['pago' => $pago] + confirmarPago($pedido, $intentId, $usuario['token']));
+}
+
+// ---------- POST /api/pagos/paypal ----------
+// Body: { id_pedido }            -> paso 1: crea la orden en PayPal y devuelve su id (202)
+//       { id_pedido, orden_id }  -> paso 2: captura la orden aprobada por el comprador (200)
+if ($metodo === 'POST' && $ruta === '/api/pagos/paypal') {
+    $usuario = usuarioAutenticado();
+    $datos = cuerpoJson();
+    $idPedido = filter_var($datos['id_pedido'] ?? null, FILTER_VALIDATE_INT);
+    $ordenId = (string) ($datos['orden_id'] ?? '');
+    if (!$idPedido || ($ordenId !== '' && !preg_match('/^[A-Z0-9]{10,25}$/', $ordenId))) {
+        error(422, 'Se requiere id_pedido (y orden_id válido para capturar)');
+    }
+
+    // Monto y dueño se toman de pedidos-service, nunca del cliente
+    $pedido = obtenerPedido($idPedido, $usuario['token']);
+    if ($pedido['estado'] !== 'pendiente') {
+        error(409, 'El pedido ya fue pagado', ['pedido_estado' => $pedido['estado']]);
+    }
+    $db = conexion();
+
+    if ($ordenId === '') {
+        // ----- Paso 1: crear la orden -----
+        $r = paypalCrearOrden($pedido);
+        if ($r['codigo'] === 0 || $r['codigo'] >= 500) {
+            error(503, 'PayPal no está disponible; el pedido sigue pendiente');
+        }
+        if ($r['codigo'] !== 201) {
+            error_log('Error de PayPal al crear la orden: ' . json_encode($r['datos']));
+            error(500, 'No se pudo crear la orden de PayPal');
+        }
+        $db->prepare('INSERT INTO pagos (id_pedido, monto, metodo, referencia_paypal, estado) VALUES (?, ?, "paypal", ?, "pendiente")')
+           ->execute([$idPedido, $pedido['total'], $r['datos']['id']]);
+        $consulta = $db->prepare('SELECT * FROM pagos WHERE id = ?');
+        $consulta->execute([$db->lastInsertId()]);
+        responder(202, [
+            'pago'                => formatearPago($consulta->fetch()),
+            'requiere_aprobacion' => true,
+            'paypal_orden_id'     => $r['datos']['id'], // el SDK de PayPal abre la ventana con este id
+        ]);
+    }
+
+    // ----- Paso 2: capturar la orden aprobada -----
+    $consulta = $db->prepare('SELECT * FROM pagos WHERE referencia_paypal = ? AND id_pedido = ?');
+    $consulta->execute([$ordenId, $idPedido]);
+    $registro = $consulta->fetch();
+    if (!$registro) {
+        error(404, 'La orden de PayPal no corresponde a este pedido');
+    }
+    $r = paypalCapturar($ordenId);
+    if ($r['codigo'] === 0 || $r['codigo'] >= 500) {
+        error(503, 'PayPal no está disponible; el pedido sigue pendiente');
+    }
+    $completado = $r['codigo'] === 201 && ($r['datos']['status'] ?? '') === 'COMPLETED';
+    $estadoPago = $completado ? 'aprobado' : 'rechazado';
+    $db->prepare('UPDATE pagos SET estado = ?, fecha_pago = NOW() WHERE id = ?')->execute([$estadoPago, $registro['id']]);
+    $consulta = $db->prepare('SELECT * FROM pagos WHERE id = ?');
+    $consulta->execute([$registro['id']]);
+    $pago = formatearPago($consulta->fetch());
+
+    if (!$completado) {
+        // Ej.: ORDER_NOT_APPROVED (no aprobada) o INSTRUMENT_DECLINED (fondos rechazados)
+        $motivo = $r['datos']['details'][0]['issue'] ?? ($r['datos']['name'] ?? 'desconocido');
+        error(422, "PayPal no completó el pago ({$motivo})", ['pago' => $pago, 'codigo_rechazo' => $motivo]);
+    }
+    responder(200, ['pago' => $pago] + confirmarPago($pedido, $ordenId, $usuario['token']));
 }
 
 // ---------- GET /api/pagos/{id}/estado ----------

@@ -1,13 +1,50 @@
 <?php
 /**
- * notificaciones-service (puerto 8085) — correos de confirmación.
+ * notificaciones-service (puerto 8085) — correos de confirmación con EmailJS.
  * No tiene base de datos: recibe avisos internos de pagos-service.
- * Bloque 1: valida el JWT, registra el aviso en el log y responde.
- * Bloque 4: envío real del correo con la API REST de EmailJS.
+ * El correo se envía con la API REST de EmailJS desde el servidor (D13): la
+ * Private Key viaja como "accessToken" y nunca llega al navegador.
  */
 declare(strict_types=1);
 
 require __DIR__ . '/../src/lib.php';
+
+/**
+ * Envía la plantilla de EmailJS. Devuelve [enviado (bool), mensaje].
+ * Timeout corto (2.5 s): pagos-service espera como máximo 3 s a este servicio (D15).
+ */
+function enviarConEmailJS(array $parametrosPlantilla): array
+{
+    $curl = curl_init('https://api.emailjs.com/api/v1.0/email/send');
+    curl_setopt_array($curl, [
+        CURLOPT_POST           => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 2,
+        CURLOPT_TIMEOUT_MS     => 2500,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS     => json_encode([
+            'service_id'      => getenv('EMAILJS_SERVICE_ID'),
+            'template_id'     => getenv('EMAILJS_TEMPLATE_ID'),
+            'user_id'         => getenv('EMAILJS_PUBLIC_KEY'),
+            'accessToken'     => getenv('EMAILJS_PRIVATE_KEY'),
+            'template_params' => $parametrosPlantilla,
+        ], JSON_UNESCAPED_UNICODE),
+    ]);
+    $respuesta = curl_exec($curl);
+    $codigo = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $errorRed = curl_error($curl);
+    curl_close($curl);
+
+    if ($respuesta === false) {
+        error_log("EmailJS no respondió: {$errorRed}");
+        return [false, 'El proveedor de correo (EmailJS) no respondió'];
+    }
+    if ($codigo !== 200) { // EmailJS responde "OK" con 200; en error devuelve un texto explicativo
+        error_log("EmailJS rechazó el envío (HTTP {$codigo}): {$respuesta}");
+        return [false, "EmailJS rechazó el envío (HTTP {$codigo})"];
+    }
+    return [true, 'Correo de confirmación enviado'];
+}
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 $ruta   = rutaActual();
@@ -26,15 +63,18 @@ if ($metodo === 'POST' && $ruta === '/api/notificaciones/interno/confirmacion-pe
         error(422, 'Se requiere email e id_pedido válidos');
     }
 
-    // Queda registrado en el log del contenedor: docker compose logs notificaciones-service
-    error_log(sprintf('[NOTIFICACIÓN] Pedido #%d pagado — confirmación para %s (total US$ %.2f)',
-        $idPedido, $email, (float) ($datos['total'] ?? 0)));
-
-    responder(200, [
-        'registrado' => true,
-        'enviado'    => false,
-        'mensaje'    => 'Aviso registrado; el envío real por EmailJS se activa en el Bloque 4',
+    $enlace = rtrim((string) getenv('APP_URL'), '/') . '/seguimiento.html?pedido=' . $idPedido;
+    // Variables de la plantilla creada en EmailJS
+    [$enviado, $mensaje] = enviarConEmailJS([
+        'to_email'           => $email,
+        'cliente_nombre'     => (string) ($datos['nombre'] ?? 'cliente'),
+        'pedido_id'          => $idPedido,
+        'total'              => sprintf('US$ %.2f', (float) ($datos['total'] ?? 0)),
+        'enlace_seguimiento' => $enlace,
     ]);
+    error_log(sprintf('[NOTIFICACIÓN] Pedido #%d -> %s: %s', $idPedido, $email, $mensaje));
+
+    responder(200, ['registrado' => true, 'enviado' => $enviado, 'mensaje' => $mensaje]);
 }
 
 error(404, 'Ruta no encontrada');

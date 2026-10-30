@@ -90,7 +90,7 @@ function pintarPie() {
   document.getElementById('pie').innerHTML = `
   <div class="container py-4 small text-white-50 d-flex flex-wrap justify-content-between gap-2">
     <span><b class="text-white">NodoTec</b> · Tienda de Electrónica y Tecnología (tienda ficticia con fines académicos)</span>
-    <span>Pagos de prueba con Stripe · Imágenes: <a class="link-light" href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a></span>
+    <span>Pagos de prueba con Stripe y PayPal · Imágenes en Cloudinary (fotos de <a class="link-light" href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>)</span>
   </div>`;
 }
 

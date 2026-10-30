@@ -111,11 +111,11 @@ if ($metodo === 'POST' && $ruta === '/api/pedidos') {
     $paymentMethodId = (string) ($datos['payment_method_id'] ?? '');
     $dir = $datos['direccion'] ?? [];
     $errores = [];
-    if ($metodoPago !== 'stripe') {
-        $errores['metodo_pago'] = 'Por ahora solo se admite "stripe" (PayPal en el Bloque 4)';
+    if (!in_array($metodoPago, ['stripe', 'paypal'], true)) {
+        $errores['metodo_pago'] = 'Método de pago no válido (stripe o paypal)';
     }
     // La tarjeta se tokeniza en el navegador con Stripe.js: aquí solo llega el id "pm_..."
-    if (!preg_match('/^pm_\w+$/', $paymentMethodId)) {
+    if ($metodoPago === 'stripe' && !preg_match('/^pm_\w+$/', $paymentMethodId)) {
         $errores['payment_method_id'] = 'Se requiere el payment_method_id generado por Stripe.js';
     }
     if (mb_strlen(trim((string) ($dir['direccion'] ?? ''))) < 5) {
@@ -165,9 +165,14 @@ if ($metodo === 'POST' && $ruta === '/api/pedidos') {
     // Se confirma ANTES de llamar a pagos: pagos-service consultará este pedido
     $db->commit();
 
-    // 3) Llamada interna a pagos-service para cobrar (D-PAGO opción B)
-    $pago = llamarServicio('POST', getenv('PAGOS_URL') . '/api/pagos/stripe',
-        ['id_pedido' => $idPedido, 'payment_method_id' => $paymentMethodId], $usuario['token'], 40);
+    // 3) Llamada interna a pagos-service para cobrar (D-PAGO opción B).
+    //    Stripe cobra en esta misma llamada; PayPal crea la orden (202) y el cobro se
+    //    completa cuando el comprador la aprueba (el navegador llama a POST /api/pagos/paypal).
+    $pago = $metodoPago === 'stripe'
+        ? llamarServicio('POST', getenv('PAGOS_URL') . '/api/pagos/stripe',
+            ['id_pedido' => $idPedido, 'payment_method_id' => $paymentMethodId], $usuario['token'], 40)
+        : llamarServicio('POST', getenv('PAGOS_URL') . '/api/pagos/paypal',
+            ['id_pedido' => $idPedido], $usuario['token'], 40);
 
     $pedido = cargarPedido($idPedido);
     if ($pago['codigo'] === 0 || $pago['codigo'] >= 500) {
@@ -177,10 +182,44 @@ if ($metodo === 'POST' && $ruta === '/api/pedidos') {
     }
     // Se combina el pedido con la respuesta de pagos-service (pago, correo_enviado, correo_mensaje...)
     if ($pago['codigo'] !== 200) {
-        // 422 pago rechazado (D2) o 202 requiere 3D Secure (client_secret)
+        // 422 pago rechazado (D2), 202 requiere 3D Secure (client_secret) o aprobación en PayPal
         responder($pago['codigo'], ['pedido' => $pedido] + $pago['datos']);
     }
     responder(201, ['pedido' => $pedido] + $pago['datos']);
+}
+
+// ---------- GET /api/pedidos/clima (solo admin) — clima del día para las entregas ----------
+// API externa OpenWeatherMap. La clave queda en el servidor; la respuesta se guarda
+// 10 minutos en un archivo temporal para no gastar el límite gratuito (1,000 consultas/día).
+if ($metodo === 'GET' && $ruta === '/api/pedidos/clima') {
+    requiereAdmin(usuarioAutenticado());
+    $cache = sys_get_temp_dir() . '/clima.json';
+    if (is_file($cache) && time() - filemtime($cache) < 600) {
+        responder(200, json_decode((string) file_get_contents($cache), true) + ['cache' => true]);
+    }
+    $url = 'https://api.openweathermap.org/data/2.5/weather?' . http_build_query([
+        'lat' => getenv('CLIMA_LAT'), 'lon' => getenv('CLIMA_LON'),
+        'units' => 'metric', 'lang' => 'es', 'appid' => getenv('OPENWEATHER_API_KEY'),
+    ]);
+    $r = llamarServicio('GET', $url, null, null, 5);
+    if ($r['codigo'] !== 200) {
+        error_log("OpenWeatherMap respondió HTTP {$r['codigo']}");
+        error(503, 'El servicio de clima no está disponible');
+    }
+    $d = $r['datos'];
+    $clima = [
+        'ciudad'      => getenv('CLIMA_CIUDAD') ?: $d['name'],
+        'temperatura' => round($d['main']['temp'], 1),
+        'sensacion'   => round($d['main']['feels_like'], 1),
+        'humedad'     => $d['main']['humidity'],
+        'viento_kmh'  => round($d['wind']['speed'] * 3.6, 1),
+        'descripcion' => $d['weather'][0]['description'],
+        'icono_url'   => "https://openweathermap.org/img/wn/{$d['weather'][0]['icon']}@2x.png",
+        'lluvia'      => isset($d['rain']),
+        'hora'        => date('c', $d['dt']),
+    ];
+    file_put_contents($cache, json_encode($clima, JSON_UNESCAPED_UNICODE));
+    responder(200, $clima + ['cache' => false]);
 }
 
 // ---------- GET /api/pedidos — historial (cliente: los suyos; admin: todos) ----------

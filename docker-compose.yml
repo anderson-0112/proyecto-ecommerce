@@ -60,6 +60,11 @@ services:
       AUTH_URL: ${AUTH_URL:-http://auth-service:8081}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+      # Cloudinary: las imágenes de productos se suben y sirven desde su CDN
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      CLOUDINARY_CARPETA: ${CLOUDINARY_CARPETA:-nodotec/productos}
     depends_on:
       mariadb-master:
         condition: service_healthy
@@ -85,6 +90,11 @@ services:
       CATALOGO_URL: ${CATALOGO_URL:-http://catalogo-service:8082}
       PAGOS_URL: ${PAGOS_URL:-http://pagos-service:8084}
       APP_URL: ${APP_URL:-http://localhost}
+      # OpenWeatherMap: clima del día en el dashboard admin (Santa Cruz del Quiché por defecto)
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
+      CLIMA_CIUDAD: ${CLIMA_CIUDAD:-Santa Cruz del Quiché}
+      CLIMA_LAT: ${CLIMA_LAT:-15.0306}
+      CLIMA_LON: ${CLIMA_LON:--91.1489}
     depends_on:
       mariadb-master:
         condition: service_healthy
@@ -106,6 +116,9 @@ services:
       NOTIFICACIONES_URL: ${NOTIFICACIONES_URL:-http://notificaciones-service:8085}
       STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+      PAYPAL_API_URL: ${PAYPAL_API_URL:-https://api-m.sandbox.paypal.com}
     depends_on:
       mariadb-master:
         condition: service_healthy
@@ -119,6 +132,12 @@ services:
     container_name: notificaciones-service
     environment:
       AUTH_URL: ${AUTH_URL:-http://auth-service:8081}
+      APP_URL: ${APP_URL:-http://localhost}
+      # EmailJS (API REST desde el servidor; la Private Key va como accessToken)
+      EMAILJS_SERVICE_ID: ${EMAILJS_SERVICE_ID}
+      EMAILJS_TEMPLATE_ID: ${EMAILJS_TEMPLATE_ID}
+      EMAILJS_PUBLIC_KEY: ${EMAILJS_PUBLIC_KEY}
+      EMAILJS_PRIVATE_KEY: ${EMAILJS_PRIVATE_KEY}
     networks: [ecommerce]
     # Si un contenedor está detenido, su nombre deja de resolverse: se falla en 1 s, no en 8
     dns_opt: ["timeout:1", "attempts:1"]

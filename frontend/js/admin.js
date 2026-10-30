@@ -39,6 +39,7 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
 document.getElementById('btnSalir').addEventListener('click', async () => { await cerrarSesion(); mostrarVista(); });
 
 async function cargarTodo() {
+  cargarClima();
   await Promise.all([cargarPedidos(), cargarCategorias()]);
   await cargarProductos();
 }
@@ -82,6 +83,22 @@ function pintarDashboard() {
     },
     options: { plugins: { legend: { position: 'bottom' } } },
   });
+}
+
+/* ---------------- Clima del día (OpenWeatherMap vía pedidos-service) ---------------- */
+async function cargarClima() {
+  const caja = document.getElementById('clima');
+  const r = await api('GET', '/api/pedidos/clima'); // la API key queda en el servidor
+  if (r.codigo !== 200) { caja.innerHTML = '<span class="text-muted small"><i class="bi bi-cloud-slash"></i> Clima no disponible en este momento.</span>'; return; }
+  const c = r.datos;
+  caja.innerHTML = `
+    <img src="${esc(c.icono_url)}" width="64" height="64" alt="">
+    <div>
+      <div class="small text-muted">Clima de hoy en ${esc(c.ciudad)} · OpenWeatherMap</div>
+      <div class="h5 mb-0">${c.temperatura} °C <span class="fs-6 text-capitalize">${esc(c.descripcion)}</span></div>
+      <div class="small text-muted">Sensación ${c.sensacion} °C · Humedad ${c.humedad}% · Viento ${c.viento_kmh} km/h</div>
+    </div>
+    <span class="ms-auto badge ${c.lluvia ? 'text-bg-warning' : 'text-bg-success'}">${c.lluvia ? 'Lluvia: prever retrasos en entregas' : 'Buenas condiciones para entregas'}</span>`;
 }
 
 /* ---------------- Exportar reporte a PDF (jsPDF, D19) ---------------- */
@@ -223,12 +240,37 @@ function abrirFormulario(p = null) {
   document.getElementById('prodStock').value = p?.stock ?? '';
   document.getElementById('prodCategoria').value = p?.categoria_id ?? categorias[0]?.id;
   document.getElementById('prodImagen').value = p?.imagen_url ?? '';
+  document.getElementById('prodArchivo').value = '';
+  document.getElementById('estadoSubida').textContent = '';
+  const vista = document.getElementById('prodVista');
+  vista.src = p?.imagen_url ?? '';
+  vista.classList.toggle('d-none', !p?.imagen_url);
   document.getElementById('prodDestacado').checked = p?.destacado ?? false;
   document.getElementById('errorProducto').textContent = '';
   bootstrap.Modal.getOrCreateInstance(document.getElementById('modalProducto')).show();
 }
 
 document.getElementById('btnNuevo').addEventListener('click', () => abrirFormulario());
+
+// Al elegir un archivo se sube a Cloudinary (catalogo-service firma la subida) y se usa su URL
+document.getElementById('prodArchivo').addEventListener('change', async (e) => {
+  const archivo = e.target.files[0];
+  if (!archivo) return;
+  const estado = document.getElementById('estadoSubida');
+  estado.textContent = 'Subiendo imagen a Cloudinary…';
+  const formulario = new FormData();
+  formulario.append('imagen', archivo);
+  const res = await fetch('/api/catalogo/imagenes', {
+    method: 'POST', body: formulario, headers: { Authorization: 'Bearer ' + leerSesion().token },
+  });
+  const datos = await res.json().catch(() => null);
+  if (res.status !== 201) { estado.textContent = datos?.error || 'No se pudo subir la imagen'; return; }
+  document.getElementById('prodImagen').value = datos.imagen_url;
+  const vista = document.getElementById('prodVista');
+  vista.src = datos.imagen_url;
+  vista.classList.remove('d-none');
+  estado.textContent = 'Imagen subida a Cloudinary ✔';
+});
 
 document.getElementById('formProducto').addEventListener('submit', async (e) => {
   e.preventDefault();

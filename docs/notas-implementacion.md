@@ -169,3 +169,36 @@ Sin rutas nuevas. Tienda: `GET /api/catalogo/destacados`, `GET /api/catalogo/cat
 - Admin: dashboard con KPI y gráficas (US$ 1,253.00 en el día de prueba); pedido #5 pasado a "preparando"; `mailto:` correcto; crear / editar stock / eliminar producto (20 → 21 → 20); PDF generado (jsPDF).
 - Responsive: tienda y admin a 375 px sin desplazamiento horizontal.
 - Regresión: `prueba-bloque1.php` 41/41 y `prueba-bloque2.php` 15/15.
+
+## Bloque 4 — APIs externas (30-oct-2026)
+
+### APIs integradas y visibles (7)
+Stripe, PayPal Sandbox, EmailJS, Cloudinary, OpenWeatherMap, QR Code API (api.qrserver.com) y Stripe.js / PayPal JS SDK en el navegador.
+
+### Rutas nuevas o cambiadas
+| Método y ruta | Acceso | Códigos | Nota |
+|---|---|---|---|
+| `POST /api/pagos/paypal` `{id_pedido}` | dueño del pedido | 202, 401, 403, 404, 409, 422, 500, 503 | Paso 1: crea la orden; responde `{pago, requiere_aprobacion: true, paypal_orden_id}` |
+| `POST /api/pagos/paypal` `{id_pedido, orden_id}` | dueño del pedido | 200, 404, 409, 422, 503 | Paso 2: captura; 200 como Stripe (`pago`, `pedido_estado`, `correo_enviado`, `correo_mensaje`); 422 `PayPal no completó el pago (ORDER_NOT_APPROVED)` |
+| `POST /api/pedidos` | cliente/admin | + 202 | Acepta `metodo_pago: "paypal"` (sin `payment_method_id`); responde 202 con `pedido` + `paypal_orden_id` |
+| `GET /api/pagos/config` | público | 200 | Ahora también `paypal_client_id` |
+| `GET /api/pedidos/clima` | admin | 200, 401, 403, 503 | **Ruta nueva.** `{ciudad, temperatura, sensacion, humedad, viento_kmh, descripcion, icono_url, lluvia, hora, cache}` |
+| `POST /api/catalogo/imagenes` (multipart, campo `imagen`) | admin | 201, 401, 403, 422, 503 | **Ruta nueva.** `{imagen_url}` de Cloudinary; JPG/PNG/WEBP/GIF, máx. 5 MB |
+| `POST /api/notificaciones/interno/confirmacion-pedido` | interno | 200 | Envía el correo con EmailJS: `{registrado, enviado, mensaje}` |
+
+### Variables nuevas (`.env`)
+`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_API_URL` (por defecto sandbox), `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `CLOUDINARY_CARPETA` (por defecto `nodotec/productos`), `OPENWEATHER_API_KEY`, `CLIMA_CIUDAD`, `CLIMA_LAT`, `CLIMA_LON` (por defecto Santa Cruz del Quiché, 15.0306, -91.1489).
+
+### Plantilla EmailJS
+Variables: `to_email`, `cliente_nombre`, `pedido_id`, `total` (`US$ 99.00`), `enlace_seguimiento` (`APP_URL/seguimiento.html?pedido=N`). Envío desde el servidor con la Private Key como `accessToken` (opción "Allow EmailJS API for non-browser applications" activada).
+
+### Cloudinary
+- 20 imágenes migradas (carpeta `nodotec/productos`, `public_id` `producto-<id>`); `db/init-master.sql` actualizado con las URLs del CDN (`…/image/upload/f_auto,q_auto,w_600/…`).
+- Script reutilizable: `docker compose exec catalogo-service php /var/www/html/src/migrar-imagenes-cloudinary.php` (solo procesa imágenes que no estén ya en Cloudinary).
+
+### Evidencias (30-oct)
+- Credenciales verificadas: OpenWeather 200 (Santa Cruz del Quiché 21.9 °C, nubes dispersas), Cloudinary 200 (plan Free), PayPal sandbox token 200.
+- `pruebas/prueba-bloque4.php`: **16/16** (clima 200 / 403 cliente; 20/20 imágenes en Cloudinary y CDN 200; subida admin 201, cliente 403, archivo falso 422; compra con correo enviado por EmailJS; QR 200 imagen; PayPal: config pública sin secreto, pedido 202 con orden, captura sin aprobar 422 `ORDER_NOT_APPROVED`, orden ajena 404, otro cliente 403).
+- Navegador: compra con PayPal sandbox (cuenta compradora de prueba) → pedido #12 `pagado`, pago `aprobado` con `referencia_paypal`, "Correo de confirmación enviado"; dashboard con clima; subida de imagen desde el formulario de producto → URL de Cloudinary.
+- Regresión: bloque 1 41/41, bloque 2 15/15.
+- Las pruebas automáticas compran con usuarios `@example.com` (dominio reservado para pruebas, RFC 2606) para no enviar correos a `test.com`, que es un dominio real.
