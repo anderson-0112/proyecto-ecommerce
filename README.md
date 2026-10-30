@@ -18,7 +18,7 @@ Proyecto Final No. 2 — Desarrollo de Aplicaciones Web (PHP, MySQL y Aplicacion
 | `mariadb-slave` (MariaDB 10.6) | 3306 | Réplica de solo lectura: catálogo y reportes del admin |
 | `redis` (Redis 7) | 6379 | Caché del catálogo y tokens JWT revocados (logout) |
 
-Pendiente: tienda y panel admin (Bloque 3), PayPal, EmailJS, Cloudinary, OpenWeatherMap (Bloque 4), despliegue en VPS de Hostinger (Bloque 6).
+Pendiente: PayPal, EmailJS, Cloudinary, OpenWeatherMap (Bloque 4), despliegue en VPS de Hostinger (Bloque 6).
 
 ## Puesta en marcha
 
@@ -27,7 +27,7 @@ Pendiente: tienda y panel admin (Bloque 3), PayPal, EmailJS, Cloudinary, OpenWea
    ```bash
    docker compose up --build -d
    ```
-3. Abrir `http://localhost` (página de prueba de compra: `http://localhost/prueba-compra.html`).
+3. Abrir la tienda en `http://localhost` y el panel de administración en `http://localhost/admin/`.
 4. Pruebas automáticas:
    ```bash
    docker run --rm --network ecommerce -v "${PWD}/pruebas:/pruebas" php:8.3-apache php /pruebas/prueba-bloque1.php
@@ -62,7 +62,7 @@ proyecto-ecommerce/
 ├── notificaciones-service/
 ├── db/init-master.sql          # esquema + 20 productos + usuarios semilla
 ├── db/crear-usuarios.sh        # un usuario de BD por servicio
-├── frontend/                   # tienda pública + admin (Bloque 3)
+├── frontend/                   # tienda pública (index, login, checkout, mis-pedidos, seguimiento) + admin/
 ├── pruebas/                    # pruebas automáticas
 └── docs/                       # enunciado, continuidad, diagramas, guía de defensa
 ```

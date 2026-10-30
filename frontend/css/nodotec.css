@@ -1,0 +1,46 @@
+/* NodoTec — estilos propios sobre Bootstrap 5 */
+:root {
+  --nodotec: #0f2a4a;
+  --nodotec-acento: #1f7ae0;
+}
+body { background: #f4f6f9; display: flex; flex-direction: column; min-height: 100vh; }
+main { flex: 1; }
+
+.bg-nodotec { background: var(--nodotec) !important; }
+.btn-nodotec { background: var(--nodotec-acento); border-color: var(--nodotec-acento); color: #fff; }
+.btn-nodotec:hover { background: #1866bd; border-color: #1866bd; color: #fff; }
+footer { background: var(--nodotec); }
+
+.hero {
+  background: linear-gradient(120deg, var(--nodotec) 0%, #1a4a7a 60%, var(--nodotec-acento) 100%);
+  color: #fff;
+}
+
+/* Tarjetas de producto */
+.producto { transition: transform .15s, box-shadow .15s; border: 0; }
+.producto:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1rem rgba(15, 42, 74, .12); }
+.producto .foto { height: 190px; padding: 1rem; background: #fff; display: flex; align-items: center; justify-content: center; }
+.producto .foto img { max-height: 100%; max-width: 100%; object-fit: contain; }
+.producto .nombre { min-height: 2.6em; }
+.precio { color: var(--nodotec-acento); font-weight: 700; }
+
+.mini-img { width: 52px; height: 52px; object-fit: contain; background: #fff; border-radius: .375rem; border: 1px solid #e5e7eb; }
+.detalle-img { max-height: 320px; object-fit: contain; }
+
+/* Seguimiento del pedido */
+.pasos { display: flex; justify-content: space-between; position: relative; }
+.pasos::before { content: ""; position: absolute; top: 18px; left: 5%; right: 5%; height: 3px; background: #dee2e6; }
+.paso { text-align: center; flex: 1; position: relative; font-size: .85rem; }
+.paso .punto { width: 38px; height: 38px; border-radius: 50%; background: #dee2e6; margin: 0 auto .4rem;
+               display: flex; align-items: center; justify-content: center; color: #fff; }
+.paso.hecho .punto { background: var(--nodotec-acento); }
+
+/* Panel admin */
+.kpi .valor { font-size: 1.6rem; font-weight: 700; }
+.tabla-admin td, .tabla-admin th { vertical-align: middle; }
+
+/* Panel admin en pantallas pequeñas: las pestañas bajan a una segunda fila */
+@media (max-width: 767.98px) {
+  .nav-admin { order: 3; width: 100%; flex-direction: row; gap: 1rem; }
+  .kpi .valor { font-size: 1.2rem; }
+}

@@ -101,3 +101,37 @@ docker compose start mariadb-slave
 docker compose stop redis
 docker compose start redis
 ```
+
+## Bloque 3 — Tienda pública y panel de administración
+
+### Páginas (todas consumen el API Gateway con `fetch`)
+| Página | Qué hace | Archivo |
+|---|---|---|
+| `/` | Destacados, catálogo con filtros (categoría, precio máximo) y paginación, detalle en ventana modal. **Sin registro** | `index.html`, `js/tienda.js` |
+| `/login.html` | Ingresar y crear cuenta (registro + login automático) | `login.html` |
+| `/checkout.html` | Dirección + tarjeta (Stripe Elements) → pedido; confirmación con QR | `checkout.html`, `js/checkout.js` |
+| `/mis-pedidos.html` | Historial del cliente | `mis-pedidos.html` |
+| `/seguimiento.html?pedido=N` | Línea de estados, productos y QR. Es el destino del QR | `seguimiento.html` |
+| `/admin/` | Dashboard (Chart.js), pedidos (detalle, cambio de estado, `mailto:`), CRUD de productos, PDF | `admin/index.html`, `js/admin.js` |
+
+Archivos comunes: `js/api.js` (llamadas al API con el JWT, carrito, formato, `esc()` contra XSS), `js/layout.js` (barra, carrito lateral, pie), `css/nodotec.css`.
+
+### Cómo se explica
+- **¿Dónde se guarda la sesión?** En `localStorage` del navegador (`nodotec_sesion`: token + usuario). Cada petición lleva `Authorization: Bearer <token>`. "Salir" llama a `POST /api/auth/logout` (revoca el token en Redis) y borra la sesión local.
+- **¿Dónde está el carrito?** En `localStorage` (`nodotec_carrito`). Solo guarda ids y cantidades útiles; el **precio final lo calcula el servidor** (pedidos pide los precios a catálogo).
+- **Checkout:** `stripe.createPaymentMethod` (la tarjeta va directo a Stripe) → `POST /api/pedidos` con `pm_…`. Si la tarjeta se rechaza (422), el pedido queda `pendiente` y el siguiente intento usa `POST /api/pagos/stripe` con el mismo `id_pedido` (D2), sin crear otro pedido. Si falta stock (409) se abre el carrito para ajustarlo (D3).
+- **Dashboard:** toma `GET /api/pedidos` (admin, leído del **Slave**) y calcula en el navegador: ventas de hoy, últimos 7 días y mes (pedidos `pagado` o posteriores), barras de ventas por día (14 días) y dona de pedidos por estado. Las fechas de la BD están en UTC y se muestran en hora local.
+- **Cambio de estado:** el botón solo ofrece el siguiente estado permitido (D1); el servidor lo vuelve a validar (409 si se intenta saltar).
+- **Comunicarse con el cliente (D12):** enlace `mailto:` con asunto "NodoTec — Tu pedido #N" y saludo prellenado.
+- **CRUD:** crear/editar con `POST`/`PUT /api/catalogo/productos`; eliminar es baja lógica (`DELETE` → `activo = 0`). Cada cambio invalida la caché de Redis. La imagen se ingresa como URL (la subida a Cloudinary llega en el Bloque 4).
+- **PDF (D19):** jsPDF + autoTable genera en el navegador el reporte de ventas del mes (pedido, fecha, cliente, estado, total y suma).
+- **Seguridad en el frontend:** todo dato de la BD se escapa con `esc()` antes de insertarlo como HTML (evita XSS si alguien guarda `<script>` en un nombre). Esconder botones no da permisos: el servidor siempre verifica el rol.
+- **Responsive:** grilla de Bootstrap (2 columnas en móvil, 4 en escritorio); en el admin las pestañas bajan a una segunda fila en pantallas pequeñas. Probado a 375 px sin desplazamiento horizontal.
+
+### Preguntas probables (Bloque 3)
+1. **¿Qué pasa si un cliente entra a `/admin/`?** Ve el formulario de acceso; si ingresa con una cuenta cliente, el panel la rechaza, y aunque manipulara el JavaScript, el servidor responde 403 a toda acción de admin.
+2. **¿Y si alguien cambia el precio en `localStorage`?** No sirve: el servidor ignora el precio del carrito.
+3. **¿Por qué el dashboard calcula en el navegador?** Usa el historial que ya expone `GET /api/pedidos` (leído del Slave) sin agregar rutas nuevas; para el volumen del proyecto es suficiente.
+
+### Demo (Bloque 3)
+Tienda `http://localhost/` → agregar productos → Ir a pagar → login `cliente@test.com / Test2026!` → tarjeta 4242 4242 4242 4242 · 12/29 · 123 → confirmación con QR → Ver seguimiento. Admin `http://localhost/admin/` con `admin@mitienda.com / Admin2026!` → dashboard → Pedidos → Ver → "Pasar a preparando" → Contactar al cliente → Productos → editar → Exportar PDF.

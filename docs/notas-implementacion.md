@@ -136,3 +136,36 @@ gateway, auth-service, catalogo-service, pedidos-service, pagos-service, notific
 - `dns_opt: timeout:1, attempts:1` en los servicios PHP: un contenedor detenido se detecta en 1 s (antes ≈ 8 s).
 - Para aplicar el Bloque 2 sobre un volumen del Bloque 1 hay que recrear las BD con `docker compose down -v` (el binlog debe existir desde la creación del Master).
 - Pruebas: `pruebas/prueba-bloque2.php` 15/15; regresión `prueba-bloque1.php` 41/41.
+
+## Bloque 3 — Interfaces (30-oct-2026)
+
+### Librerías del frontend (CDN jsDelivr, versiones fijas)
+| Librería | Versión | Uso |
+|---|---|---|
+| Bootstrap | 5.3.3 | Estilos y componentes (tienda y admin) |
+| Bootstrap Icons | 1.11.3 | Iconos |
+| Chart.js | 4.4.4 | Gráficas del dashboard |
+| jsPDF | 2.5.1 | Exportar reporte de ventas a PDF (D19) |
+| jsPDF-AutoTable | 3.8.2 | Tabla del reporte PDF |
+| Stripe.js | v3 (js.stripe.com) | Tokenizar la tarjeta en el navegador |
+
+### Páginas
+`/` (catálogo sin registro: destacados, filtros categoría/precio máximo, paginación de 8, detalle modal), `/login.html` (ingreso y registro), `/checkout.html` (Stripe Elements, confirmación con QR), `/mis-pedidos.html`, `/seguimiento.html?pedido=N` (destino del QR), `/admin/` (dashboard Chart.js, pedidos, CRUD, PDF). Página técnica de pruebas: `/prueba-compra.html`.
+
+### Rutas usadas por el frontend
+Sin rutas nuevas. Tienda: `GET /api/catalogo/destacados`, `GET /api/catalogo/categorias`, `GET /api/catalogo/productos`, `GET /api/catalogo/productos/{id}`, `POST /api/auth/register|login|logout`, `GET /api/pagos/config`, `POST /api/pedidos`, `POST /api/pagos/stripe` (reintento D2 y 3D Secure), `GET /api/pedidos`, `GET /api/pedidos/{id}`. Admin: además `PUT /api/pedidos/{id}/estado`, `POST/PUT/DELETE /api/catalogo/productos`.
+
+### Detalles de implementación
+- Sesión y carrito en `localStorage` (`nodotec_sesion`, `nodotec_carrito`); el servidor recalcula precios.
+- Dashboard: KPI de ventas de hoy / últimos 7 días / mes y pedidos por preparar; barras de ventas por día (14 días); dona de pedidos por estado. Venta = pedido en `pagado` o posterior. Fechas de la BD en UTC, mostradas en hora local.
+- `mailto:` con asunto "NodoTec — Tu pedido #N" (D12).
+- Gateway: `Cache-Control: no-cache` en archivos estáticos (el navegador revalida y no usa versiones viejas tras un cambio) y `absolute_redirect off` (`/admin` → `/admin/` sin cambiar host ni puerto).
+- Corrección en pagos-service: la clave de idempotencia de Stripe ahora incluye la fecha del pedido (`pedido-<id>-<AAAAMMDDhhmmss>-<pm>`). Antes, al recrear la BD los ids de pedido se repetían y Stripe rechazaba el cobro por clave reutilizada (`idempotency_error`).
+
+### Evidencias de prueba (navegador, 30-oct)
+- Catálogo sin sesión: 6 destacados, 8 productos por página, 3 páginas, 7 categorías en el filtro.
+- Checkout: tarjeta de prueba rechazada 4000 0000 0000 0002 → "Pago rechazado… Tu pedido #5 quedó pendiente"; reintento con 4242 sobre el mismo pedido → "Tu pedido #5 está pagado", QR mostrado, carrito vaciado.
+- Seguimiento y Mis pedidos muestran estado, productos, dirección y QR; horas en hora de Guatemala.
+- Admin: dashboard con KPI y gráficas (US$ 1,253.00 en el día de prueba); pedido #5 pasado a "preparando"; `mailto:` correcto; crear / editar stock / eliminar producto (20 → 21 → 20); PDF generado (jsPDF).
+- Responsive: tienda y admin a 375 px sin desplazamiento horizontal.
+- Regresión: `prueba-bloque1.php` 41/41 y `prueba-bloque2.php` 15/15.

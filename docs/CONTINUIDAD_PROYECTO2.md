@@ -9,9 +9,9 @@
 
 ## 0. Estado en una línea
 
-Análisis ✅ · Informe redactado (faltan C1 parcial, C7, C8, C10 y datos de implementación) ✅ · 7 diagramas ✅ · Arquitectura (Fig. 1) ⏳ · Decisiones D1–D21 y D-PAGO ✅ · **Bloque 0 ✅ · Bloque 1 ✅ (compra 4242 → pedido `pagado`; 41/41 pruebas) · Bloque 2 ✅ (Master-Slave + Redis; 15/15)** · Hosting: **VPS de Hostinger** (A9 actualizada, 30-oct).
+Análisis ✅ · Informe redactado (faltan C1 parcial, C7, C8, C10 y datos de implementación) ✅ · 7 diagramas ✅ · Arquitectura (Fig. 1) ⏳ · Decisiones D1–D21 y D-PAGO ✅ · **Bloque 0 ✅ · Bloque 1 ✅ (compra 4242 → pedido `pagado`; 41/41 pruebas) · Bloque 2 ✅ (Master-Slave + Redis; 15/15) · Bloque 3 ✅ (tienda NodoTec + panel admin)** · Hosting: **VPS de Hostinger** (A9 actualizada, 30-oct).
 
-**Siguiente paso exacto:** Claude Code ejecuta el **Bloque 3** (tienda pública NodoTec con Bootstrap 5 y panel admin con Chart.js). En paralelo, el chat del Proyecto pasa al informe lo de `docs/notas-implementacion.md` (Bloques 1 y 2).
+**Siguiente paso exacto:** **Bloque 4** (QR visible ya hecho; faltan OpenWeatherMap, Cloudinary, EmailJS y PayPal sandbox). **Bloqueado hasta que Anderson pegue en `.env` las claves de PayPal, EmailJS, Cloudinary y OpenWeatherMap** (sección 8, punto 4). En paralelo, el chat del Proyecto pasa al informe lo de `docs/notas-implementacion.md` (Bloques 1–3) y toma las capturas.
 
 ---
 
@@ -327,6 +327,7 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 - 2026-10-30 — **Bloque 1 terminado:** `docker compose up --build -d` levanta gateway (Nginx 1.27), 5 servicios PHP 8.3 + Apache y MariaDB 10.6 (4 BD aisladas, un usuario por servicio, 20 productos, usuarios semilla). JWT HS256 propio en auth-service, verificado por los demás vía `/api/auth/verify`. Compra con tarjeta 4242 desde el navegador (Stripe.js) → pedido `pagado`, `pi_…` guardado, stock descontado, QR generado. Pruebas automáticas `pruebas/prueba-bloque1.php`: 41/41. Tolerancia: con notificaciones detenido la compra termina (201, `pagado`, correo no enviado). Envío real de correo pendiente (Bloque 4).
 - 2026-10-30 — Informe `.docx` sacado del repositorio (`git rm --cached`) y `docs/Informe*.docx` agregado a `.gitignore` (sigue en el historial de Git del commit `ed26bd7`).
 - 2026-10-30 — **Bloque 2 terminado:** MariaDB Slave (`server-id=2`, `read-only`) replicando del Master por binlog (usuario `replicador`; el Slave copia desde el binlog incluso el esquema y los datos iniciales); catalogo-service y el listado admin de pedidos (reportes, D9) leen del Slave; si el Slave cae se lee del Master (marca de 15 s en Redis). Redis 7 con contraseña y AOF: caché del catálogo (TTL 30 s, invalidación por versión, encabezado `X-Cache`), tokens revocados y `POST /api/auth/logout` (204). Si Redis cae, catálogo y compras siguen. `GET /api/pedidos` acepta `?desde=AAAA-MM-DD`. Redis **no** se usa para sesiones (JWT sin sesión; recorte previsto en la sección 7). Pruebas: bloque 2 15/15, bloque 1 41/41.
+- 2026-10-30 — **Bloque 3 terminado:** tienda pública NodoTec (Bootstrap 5, responsive): catálogo sin registro con destacados, filtros y paginación, detalle, carrito en el navegador, registro/login, checkout con Stripe Elements (reintento sobre el mismo pedido si se rechaza, D2; 409 abre el carrito, D3), confirmación con QR, mis pedidos y página de seguimiento (destino del QR). Panel `/admin/`: dashboard Chart.js (ventas día/7 días/mes, ventas por día, pedidos por estado; datos del Slave), gestión de pedidos (detalle, siguiente estado, `mailto:`), CRUD de productos (imagen por URL; Cloudinary en Bloque 4) y PDF con jsPDF. Sin rutas nuevas. Corregida la clave de idempotencia de Stripe (incluye la fecha del pedido). Gateway con `Cache-Control: no-cache`. Probado en navegador (escritorio y 375 px); regresión 41/41 y 15/15.
 
 ---
 

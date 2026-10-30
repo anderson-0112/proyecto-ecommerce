@@ -39,8 +39,12 @@ function stripe(string $metodo, string $ruta, array $parametros = [], ?string $c
     return ['codigo' => $codigo, 'datos' => $respuesta ? (json_decode($respuesta, true) ?? []) : []];
 }
 
-/** Crea y confirma en un solo paso un PaymentIntent (cobro) en dólares. */
-function stripeCobrar(int $idPedido, float $monto, string $paymentMethodId): array
+/**
+ * Crea y confirma en un solo paso un PaymentIntent (cobro) en dólares.
+ * $fechaPedido forma parte de la clave de idempotencia: si la BD se reinicia, los ids
+ * de pedido vuelven a empezar y Stripe (que recuerda las claves 24 h) las confundiría.
+ */
+function stripeCobrar(int $idPedido, string $fechaPedido, float $monto, string $paymentMethodId): array
 {
     return stripe('POST', '/payment_intents', [
         'amount'         => (int) round($monto * 100), // Stripe trabaja en centavos
@@ -51,5 +55,5 @@ function stripeCobrar(int $idPedido, float $monto, string $paymentMethodId): arr
         'metadata'       => ['id_pedido' => $idPedido],
         // Solo pagos que no redirigen a otra página (tarjeta); 3D Secure se resuelve en el navegador
         'automatic_payment_methods' => ['enabled' => 'true', 'allow_redirects' => 'never'],
-    ], "pedido-{$idPedido}-{$paymentMethodId}");
+    ], "pedido-{$idPedido}-" . preg_replace('/\D/', '', $fechaPedido) . "-{$paymentMethodId}");
 }

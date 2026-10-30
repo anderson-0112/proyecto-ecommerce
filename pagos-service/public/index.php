@@ -112,7 +112,7 @@ if ($metodo === 'POST' && $ruta === '/api/pagos/stripe') {
             error(422, 'El pago no corresponde a este pedido');
         }
     } else {
-        $r = stripeCobrar($idPedido, $pedido['total'], $paymentMethodId);
+        $r = stripeCobrar($idPedido, $pedido['fecha'], $pedido['total'], $paymentMethodId);
     }
 
     if ($r['codigo'] === 0 || $r['codigo'] >= 500) {
