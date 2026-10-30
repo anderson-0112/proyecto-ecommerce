@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NodoTec — Prueba de compra</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Stripe.js debe cargarse siempre desde js.stripe.com (requisito de Stripe) -->
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    #tarjeta { padding: .6rem .75rem; border: 1px solid #ced4da; border-radius: .375rem; background: #fff; }
+    pre { max-height: 360px; }
+  </style>
+</head>
+<body class="bg-light">
+<div class="container py-4" style="max-width: 860px">
+  <h1 class="h4">NodoTec · Prueba de compra (Bloque 1)</h1>
+  <p class="text-muted small">Página técnica para probar el flujo completo. La tienda definitiva se construye en el Bloque 3.</p>
+
+  <div class="card mb-3"><div class="card-body">
+    <h2 class="h6">1. Iniciar sesión</h2>
+    <div class="row g-2">
+      <div class="col-sm-5"><input id="email" class="form-control" value="cliente@test.com"></div>
+      <div class="col-sm-4"><input id="password" type="password" class="form-control" value="Test2026!"></div>
+      <div class="col-sm-3"><button id="btnLogin" class="btn btn-outline-primary w-100">Entrar</button></div>
+    </div>
+    <div id="sesion" class="small mt-2 text-muted">Sin sesión</div>
+  </div></div>
+
+  <div class="card mb-3"><div class="card-body">
+    <h2 class="h6">2. Elegir productos</h2>
+    <div id="productos" class="row g-2 small">Cargando catálogo…</div>
+  </div></div>
+
+  <div class="card mb-3"><div class="card-body">
+    <h2 class="h6">3. Dirección y tarjeta</h2>
+    <div class="row g-2 mb-2">
+      <div class="col-sm-6"><input id="direccion" class="form-control" value="4a. Calle 5-20, Zona 1" placeholder="Dirección"></div>
+      <div class="col-sm-3"><input id="ciudad" class="form-control" value="Santa Cruz del Quiché" placeholder="Ciudad"></div>
+      <div class="col-sm-3"><input id="telefono" class="form-control" value="5555-0000" placeholder="Teléfono"></div>
+    </div>
+    <!-- Campo de tarjeta de Stripe Elements: el número NUNCA pasa por nuestro servidor -->
+    <div id="tarjeta"></div>
+    <div class="form-text">Tarjeta de prueba: 4242 4242 4242 4242 · 12/29 · 123</div>
+    <button id="btnPagar" class="btn btn-primary mt-3">Pagar</button>
+  </div></div>
+
+  <h2 class="h6">Respuesta</h2>
+  <div id="estado" class="fw-semibold mb-2"></div>
+  <img id="qr" class="mb-2 d-none" alt="QR de seguimiento">
+  <pre id="salida" class="bg-dark text-light p-3 rounded small"></pre>
+</div>
+
+<script>
+let token = null, stripe = null, tarjeta = null;
+const $ = (id) => document.getElementById(id);
+const mostrar = (datos) => { $('salida').textContent = JSON.stringify(datos, null, 2); };
+
+async function api(metodo, ruta, cuerpo) {
+  const res = await fetch(ruta, {
+    method: metodo,
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+  });
+  return { codigo: res.status, datos: await res.json().catch(() => null) };
+}
+
+// Catálogo público (sin sesión)
+api('GET', '/api/catalogo/productos?por_pagina=50').then(({ datos }) => {
+  $('productos').innerHTML = datos.productos.map(p => `
+    <div class="col-sm-6 d-flex align-items-center gap-2">
+      <img src="${p.imagen_url}" width="48" height="48" style="object-fit:contain" alt="">
+      <span class="flex-grow-1">${p.nombre}<br><b>US$ ${p.precio.toFixed(2)}</b> · stock ${p.stock}</span>
+      <input type="number" min="0" max="${p.stock}" value="0" data-id="${p.id}" class="form-control form-control-sm cantidad" style="width:70px">
+    </div>`).join('');
+});
+
+// Stripe.js con la clave PÚBLICA (la secreta solo la tiene pagos-service)
+api('GET', '/api/pagos/config').then(({ datos }) => {
+  stripe = Stripe(datos.stripe_public_key);
+  tarjeta = stripe.elements().create('card', { hidePostalCode: true });
+  tarjeta.mount('#tarjeta');
+});
+
+$('btnLogin').onclick = async () => {
+  const r = await api('POST', '/api/auth/login', { email: $('email').value, password: $('password').value });
+  mostrar(r);
+  if (r.codigo === 200) {
+    token = r.datos.token;
+    $('sesion').textContent = `Sesión: ${r.datos.usuario.nombre} (${r.datos.usuario.rol})`;
+  }
+};
+
+$('btnPagar').onclick = async () => {
+  const items = [...document.querySelectorAll('.cantidad')]
+    .filter(i => +i.value > 0).map(i => ({ id_producto: +i.dataset.id, cantidad: +i.value }));
+  if (!token) return alert('Primero inicie sesión');
+  if (!items.length) return alert('Elija al menos un producto');
+  $('btnPagar').disabled = true;
+  $('estado').textContent = 'Procesando…';
+  try {
+    // 1) El navegador convierte la tarjeta en un PaymentMethod (pm_...) directamente con Stripe
+    const { paymentMethod, error } = await stripe.createPaymentMethod({ type: 'card', card: tarjeta });
+    if (error) { $('estado').textContent = error.message; return; }
+
+    // 2) Se crea el pedido; pedidos-service verifica stock y llama a pagos-service
+    let r = await api('POST', '/api/pedidos', {
+      items, metodo_pago: 'stripe', payment_method_id: paymentMethod.id,
+      direccion: { direccion: $('direccion').value, ciudad: $('ciudad').value, telefono: $('telefono').value },
+    });
+
+    // 3) Si el banco pide 3D Secure, se resuelve aquí y se confirma el pago
+    if (r.codigo === 202 && r.datos.client_secret) {
+      const accion = await stripe.handleCardAction(r.datos.client_secret);
+      if (accion.error) { $('estado').textContent = accion.error.message; mostrar(r); return; }
+      r = await api('POST', '/api/pagos/stripe', { id_pedido: r.datos.pedido.id, payment_intent_id: accion.paymentIntent.id });
+    }
+    mostrar(r);
+    const pedido = r.datos?.pedido;
+    $('estado').textContent = r.codigo === 201
+      ? `Pedido #${pedido.id}: ${pedido.estado.toUpperCase()} — ${r.datos.correo_mensaje}`
+      : r.codigo === 200 // confirmado tras 3D Secure
+        ? `Pedido: ${r.datos.pedido_estado.toUpperCase()} — ${r.datos.correo_mensaje}`
+        : `Error ${r.codigo}: ${r.datos?.error ?? ''}`;
+    if (pedido?.qr_url) { $('qr').src = pedido.qr_url; $('qr').classList.remove('d-none'); }
+  } finally {
+    $('btnPagar').disabled = false;
+  }
+};
+</script>
+</body>
+</html>

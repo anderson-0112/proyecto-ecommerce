@@ -1,0 +1,137 @@
+# =============================================================
+# Plataforma E-Commerce Distribuida — orquestación local
+# Uso:  docker compose up --build -d
+# Un contenedor por servicio; todos en la red interna "ecommerce".
+# Solo el Gateway publica un puerto (80): es la única entrada, en local y en el VPS.
+# URLs entre servicios y datos de conexión: variables de entorno con los valores
+# de Docker por defecto (${VAR:-valor}); se pueden cambiar en el .env sin tocar este archivo.
+# =============================================================
+
+services:
+
+  # ---------- API Gateway (punto único de entrada) ----------
+  gateway:
+    image: nginx:1.27-alpine
+    container_name: gateway
+    ports:
+      - "${GATEWAY_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - auth-service
+      - catalogo-service
+      - pedidos-service
+      - pagos-service
+    networks: [ecommerce]
+    restart: unless-stopped
+
+  # ---------- Microservicios PHP 8 (Apache) ----------
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    environment:
+      DB_HOST: ${DB_HOST:-mariadb-master}
+      DB_NAME: auth_db
+      DB_USER: auth_user
+      DB_PASSWORD: ${AUTH_DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      mariadb-master:
+        condition: service_healthy
+    networks: [ecommerce]
+    restart: unless-stopped
+
+  catalogo-service:
+    build: ./catalogo-service
+    container_name: catalogo-service
+    environment:
+      DB_HOST: ${DB_HOST:-mariadb-master}            # escrituras (admin)
+      DB_READ_HOST: ${DB_READ_HOST:-mariadb-master}  # lecturas: pasa al Slave en el Bloque 2
+      DB_NAME: catalogo_db
+      DB_USER: catalogo_user
+      DB_PASSWORD: ${CATALOGO_DB_PASSWORD}
+      AUTH_URL: ${AUTH_URL:-http://auth-service:8081}
+    depends_on:
+      mariadb-master:
+        condition: service_healthy
+    networks: [ecommerce]
+    restart: unless-stopped
+
+  pedidos-service:
+    build: ./pedidos-service
+    container_name: pedidos-service
+    environment:
+      DB_HOST: ${DB_HOST:-mariadb-master}
+      DB_NAME: pedidos_db
+      DB_USER: pedidos_user
+      DB_PASSWORD: ${PEDIDOS_DB_PASSWORD}
+      AUTH_URL: ${AUTH_URL:-http://auth-service:8081}
+      CATALOGO_URL: ${CATALOGO_URL:-http://catalogo-service:8082}
+      PAGOS_URL: ${PAGOS_URL:-http://pagos-service:8084}
+      APP_URL: ${APP_URL:-http://localhost}
+    depends_on:
+      mariadb-master:
+        condition: service_healthy
+    networks: [ecommerce]
+    restart: unless-stopped
+
+  pagos-service:
+    build: ./pagos-service
+    container_name: pagos-service
+    environment:
+      DB_HOST: ${DB_HOST:-mariadb-master}
+      DB_NAME: pagos_db
+      DB_USER: pagos_user
+      DB_PASSWORD: ${PAGOS_DB_PASSWORD}
+      AUTH_URL: ${AUTH_URL:-http://auth-service:8081}
+      PEDIDOS_URL: ${PEDIDOS_URL:-http://pedidos-service:8083}
+      NOTIFICACIONES_URL: ${NOTIFICACIONES_URL:-http://notificaciones-service:8085}
+      STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+    depends_on:
+      mariadb-master:
+        condition: service_healthy
+    networks: [ecommerce]
+    restart: unless-stopped
+
+  notificaciones-service:
+    build: ./notificaciones-service
+    container_name: notificaciones-service
+    environment:
+      AUTH_URL: ${AUTH_URL:-http://auth-service:8081}
+    networks: [ecommerce]
+    restart: unless-stopped
+
+  # ---------- Base de datos ----------
+  mariadb-master:
+    image: mariadb:10.6
+    container_name: mariadb-master
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      # Los usa db/crear-usuarios.sh para crear un usuario por servicio
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
+      CATALOGO_DB_PASSWORD: ${CATALOGO_DB_PASSWORD}
+      PEDIDOS_DB_PASSWORD: ${PEDIDOS_DB_PASSWORD}
+      PAGOS_DB_PASSWORD: ${PAGOS_DB_PASSWORD}
+    # Sin puerto publicado al host: solo los servicios acceden por la red interna.
+    # Para inspeccionar: docker exec -it mariadb-master mariadb -uroot -p
+    volumes:
+      - master-data:/var/lib/mysql
+      # Se ejecutan en orden alfabético solo la PRIMERA vez (volumen vacío)
+      - ./db/init-master.sql:/docker-entrypoint-initdb.d/01-init-master.sql:ro
+      - ./db/crear-usuarios.sh:/docker-entrypoint-initdb.d/02-crear-usuarios.sh:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks: [ecommerce]
+    restart: unless-stopped
+
+networks:
+  ecommerce:
+    name: ecommerce
+
+volumes:
+  master-data:

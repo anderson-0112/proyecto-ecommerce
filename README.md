@@ -1,8 +1,49 @@
-# Plataforma E-Commerce Distribuida — Tienda de Electrónica y Tecnología
+# NodoTec — Plataforma E-Commerce Distribuida (Tienda de Electrónica y Tecnología)
 
 Proyecto Final No. 2 — Desarrollo de Aplicaciones Web (PHP, MySQL y Aplicaciones Distribuidas), UMG.
 
-> Tienda **ficticia** con fines académicos. Arquitectura de microservicios en PHP 8 + MariaDB Master-Slave + Redis + Nginx (API Gateway), orquestada con Docker Compose.
+> Tienda **ficticia** con fines académicos. Microservicios en PHP 8 + MariaDB + Nginx (API Gateway), orquestados con Docker Compose. Pagos con Stripe en **modo prueba**.
+
+## Arquitectura (Bloque 1)
+
+| Contenedor | Puerto interno | Responsabilidad |
+|---|---|---|
+| `gateway` (Nginx 1.27) | 80 — **único puerto publicado** | Entrada única: frontend + proxy a `/api/*`; bloquea rutas internas |
+| `auth-service` | 8081 | Registro, login, JWT (2 h cliente / 8 h admin), verificación |
+| `catalogo-service` | 8082 | Productos, categorías, filtros, paginación, stock, CRUD admin |
+| `pedidos-service` | 8083 | Pedidos, estados, historial, QR de seguimiento |
+| `pagos-service` | 8084 | Cobro con Stripe, estado de pagos |
+| `notificaciones-service` | 8085 | Confirmación de pedido (correo real con EmailJS en el Bloque 4) |
+| `mariadb-master` (MariaDB 10.6) | 3306 | `auth_db`, `catalogo_db`, `pedidos_db`, `pagos_db` (aisladas) |
+
+Pendiente: MariaDB Slave + Redis (Bloque 2), tienda y panel admin (Bloque 3), PayPal, EmailJS, Cloudinary, OpenWeatherMap (Bloque 4), despliegue en VPS de Hostinger (Bloque 6).
+
+## Puesta en marcha
+
+1. Copiar `.env.example` a `.env` y completar los valores (claves de Stripe **de prueba**).
+2. Levantar todo:
+   ```bash
+   docker compose up --build -d
+   ```
+3. Abrir `http://localhost` (página de prueba de compra: `http://localhost/prueba-compra.html`).
+4. Pruebas automáticas:
+   ```bash
+   docker run --rm --network ecommerce -v "${PWD}/pruebas:/pruebas" php:8.3-apache php /pruebas/prueba-bloque1.php
+   ```
+
+Las URLs entre servicios y los datos de conexión a la BD son variables de entorno con los valores de Docker por defecto (ver `docker-compose.yml` y `.env.example`); el mismo archivo se usa en local y en el VPS.
+
+## Credenciales de prueba
+
+| Rol | Usuario | Contraseña |
+|---|---|---|
+| Administrador | admin@mitienda.com | Admin2026! |
+| Cliente | cliente@test.com | Test2026! |
+| Tarjeta Stripe (prueba) | 4242 4242 4242 4242 | 12/29 · CVC 123 |
+
+## Endpoints
+
+Lista completa con accesos, códigos HTTP y ejemplos JSON: [`docs/notas-implementacion.md`](docs/notas-implementacion.md).
 
 ## Estructura
 
@@ -10,16 +51,16 @@ Proyecto Final No. 2 — Desarrollo de Aplicaciones Web (PHP, MySQL y Aplicacion
 proyecto-ecommerce/
 ├── docker-compose.yml
 ├── nginx/nginx.conf            # API Gateway
-├── auth-service/               # 8081 — registro, login, JWT
-├── catalogo-service/           # 8082 — productos, categorías, stock
-├── pedidos-service/            # 8083 — pedidos, estados, historial
-├── pagos-service/              # 8084 — Stripe / PayPal (sandbox)
-├── notificaciones-service/     # 8085 — correos (EmailJS)
-├── db/init-master.sql          # esquema + datos semilla (20+ productos)
-├── frontend/                   # tienda pública + panel admin
-└── docs/                       # enunciado, continuidad, diagramas, guías
+├── auth-service/               # Dockerfile + PHP (src/jwt.php)
+├── catalogo-service/
+├── pedidos-service/
+├── pagos-service/              # src/stripe.php
+├── notificaciones-service/
+├── db/init-master.sql          # esquema + 20 productos + usuarios semilla
+├── db/crear-usuarios.sh        # un usuario de BD por servicio
+├── frontend/                   # tienda pública + admin (Bloque 3)
+├── pruebas/                    # pruebas automáticas
+└── docs/                       # enunciado, continuidad, diagramas, guía de defensa
 ```
 
-## Estado
-
-Ver `docs/CONTINUIDAD_PROYECTO2.md` (sección 7: plan por bloques).
+Créditos de las imágenes de productos: [`docs/creditos-imagenes.md`](docs/creditos-imagenes.md).

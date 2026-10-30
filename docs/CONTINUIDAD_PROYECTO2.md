@@ -1,6 +1,6 @@
 # CONTINUIDAD — Proyecto Final No. 2: E-Commerce Distribuido (Tienda de Electrónica y Tecnología)
 
-> Archivo de traspaso. Última actualización: **29 de octubre de 2026, 18:10 (hora de Guatemala)**.
+> Archivo de traspaso. Última actualización: **30 de octubre de 2026 (hora de Guatemala)** — cierre del Bloque 1.
 > **Fuente de verdad de los requisitos:** `Proyecto2_ECommerce_Distribuido.docx` (enunciado del ingeniero).
 > Si este archivo y el enunciado se contradicen, **manda el enunciado**.
 > Ubicación: raíz del Proyecto en Claude (Contexto) **y** `docs/CONTINUIDAD_PROYECTO2.md` en el repositorio. Mantener ambas copias iguales (ver sección 12).
@@ -9,9 +9,9 @@
 
 ## 0. Estado en una línea
 
-Análisis ✅ · Informe redactado (faltan C1 parcial, C7, C8, C10 y datos de implementación) ✅ · 7 diagramas ✅ · Arquitectura (Fig. 1) ⏳ · **Decisiones técnicas D1–D21 y D-PAGO APROBADAS (29-oct)** ✅ · Código: no iniciado · Hosting: Railway (cuenta en creación).
+Análisis ✅ · Informe redactado (faltan C1 parcial, C7, C8, C10 y datos de implementación) ✅ · 7 diagramas ✅ · Arquitectura (Fig. 1) ⏳ · Decisiones D1–D21 y D-PAGO ✅ · **Bloque 0 ✅ · Bloque 1 ✅ (compra 4242 → pedido `pagado`; 41/41 pruebas)** · Hosting: **VPS de Hostinger** (A9 actualizada, 30-oct).
 
-**Siguiente paso exacto:** Claude Code ejecuta **Bloque 0 y Bloque 1** (sección 7) en la carpeta local `proyecto-ecommerce`, probando en Docker Desktop. En paralelo, el chat del Proyecto (documentación) aplica en el informe lo que ya no depende del código.
+**Siguiente paso exacto:** Claude Code ejecuta el **Bloque 2** (replicación Master-Slave + Redis: caché de catálogo, tokens revocados y `POST /api/auth/logout`). En paralelo, el chat del Proyecto pasa al informe lo de `docs/notas-implementacion.md` (Bloque 1) y cambia Railway → VPS de Hostinger.
 
 ---
 
@@ -27,11 +27,11 @@ Análisis ✅ · Informe redactado (faltan C1 parcial, C7, C8, C10 y datos de im
 | Valor | 15 puntos |
 | **Fecha de entrega** | **31 de octubre de 2026** (−1 punto por cada día de atraso) |
 | Tipo de negocio | **Opción C: Tienda de Electrónica y Tecnología** — ✅ confirmado por Anderson que **no repite** el negocio del Proyecto 1 |
-| Tienda | **Ficticia**. Nombre comercial: `[PENDIENTE — lo define Anderson]` (se usa un marcador hasta el Bloque 3) |
+| Tienda | **Ficticia**. Nombre comercial: **NodoTec** (definido por Anderson, 30-oct) |
 | Equipo | Desde el 29-oct, **Anderson realiza todo el proyecto** (código y documentación). |
 | Portada del informe | **La elabora Anderson personalmente.** No tocarla. |
 | Entorno de Anderson | Windows, VS Code, PowerShell, Docker Desktop, GitHub `anderson-0112` (2FA) |
-| Repositorio | https://github.com/anderson-0112/proyecto-ecommerce.git (vacío al 29-oct) |
+| Repositorio | https://github.com/anderson-0112/proyecto-ecommerce.git (rama `main`) |
 | Carpeta local | `proyecto-ecommerce` (entorno seleccionado en Claude Code) |
 
 ---
@@ -136,13 +136,16 @@ Comando: `docker-compose up --build -d`.
 | A6 | El ingeniero **sí pide informe formal**, además de lo técnico | Anderson |
 | A7 | Estructura del informe de 19 secciones (sección 4) | Anderson |
 | A8 | Diagramas UML/ER aprobados (sección 5) | Anderson |
-| A9 | **No Hostinger compartido.** Plataforma: **Railway** (cuenta con GitHub) | Recomendación aceptada |
+| A9 | ~~Railway~~ → **VPS de Hostinger** (aprobado por el catedrático). Se despliega con el **mismo `docker-compose.yml`**; solo el Gateway publica puertos. URLs entre servicios y datos de conexión en variables de entorno con valores de Docker por defecto (`${VAR:-valor}`). Sigue descartado el hosting compartido | Anderson, 30-oct |
 | A10 | Código con **Claude Code** + pruebas en **Docker Desktop** antes de desplegar | Anderson |
 | A11 | Diagramas como código (Mermaid) cuando sea posible; PNG/SVG para el informe | Aprobado |
 | A12 | **Todas las decisiones técnicas D1–D21 y D-PAGO (opción B)** de la sección 6 | Anderson, 29-oct |
 | A13 | Datos semilla: 20 productos de **marcas/modelos reales**, precios en **USD**, fotos con **licencia libre** por URL pública (migración a Cloudinary en Bloque 4). Claude Code propone la lista y Anderson la revisa antes de cerrar el Bloque 1 | Anderson, 29-oct |
 | A14 | División del trabajo: **Claude Code = código**; **chat del Proyecto = documentación** (informe, diagramas, guía de defensa final). Ver sección 12 | Anderson, 29-oct |
 | A15 | Cuando un chat se vuelva demasiado largo, generar un **resumen/prompt de continuidad** para seguir en un chat nuevo (sección 12) | Anderson, 29-oct |
+| A16 | Nombre comercial: **NodoTec** | Anderson, 30-oct |
+| A17 | 20 productos semilla aprobados (lista en `db/init-master.sql`; créditos de fotos en `docs/creditos-imagenes.md`) | Anderson, 30-oct |
+| A18 | Rutas adicionales aprobadas: `GET /api/catalogo/categorias`, `GET /api/pedidos` (historial), `GET /api/pagos/config` (clave pública de Stripe), `/api/<servicio>/health`; rutas internas `/api/*/interno/*` (bloqueadas en el Gateway): `catalogo/interno/verificar-stock`, `catalogo/interno/descontar-stock`, `pedidos/interno/{id}/pagado`, `notificaciones/interno/confirmacion-pedido` | Anderson, 30-oct |
 
 ---
 
@@ -161,12 +164,12 @@ Comando: `docker-compose up --build -d`.
 | 6. Objetivos | ✅ (C5 aplicada) |
 | 7. Alcance | ✅ C6 · ⚠️ **C7** y **C8** pendientes |
 | 8. Requerimientos | ✅ C9 · ⚠️ **C10 (RF-19)** pendiente |
-| 9. Tecnologías | 🟡 Completable ya: notificaciones = PHP 8 (D14), hosting = Railway. Versiones de librerías: tras Bloque 1 |
+| 9. Tecnologías | 🟡 Completable ya: notificaciones = PHP 8 (D14), hosting = VPS de Hostinger. Versiones: ver `docs/notas-implementacion.md` (Bloque 1) |
 | 10. Arquitectura | 🟡 10.3 completable ya (D7) · 10.4 agregar descuento de stock (D20) y QR (D11) · 10.5 completable ya (D15) · Fig. 1 tras Bloque 2 |
 | 11. Base de datos | 🟡 Campos D5 completables ya; tipos y llaves tras el SQL final; replicación tras Bloque 2 |
 | 12. APIs externas | ✅ C11 aplicada · ⏳ cómo se integró cada API (tras Bloques 1 y 4) |
 | 13. Endpoints | ✅ C12 · 🟡 accesos completables ya (D16), agregar `POST /api/auth/logout` (D8) · ⏳ rutas CRUD finales, JSON y códigos (de `docs/notas-implementacion.md`) |
-| 14. Despliegue | ⏳ Railway, procedimiento, URLs |
+| 14. Despliegue | ⏳ VPS de Hostinger (Docker Compose), procedimiento, URLs |
 | 15. Evidencias | ✅ C13 aplicada · ⚠️ falta cerrar el corchete en "[PENDIENTE: captura" · ⏳ capturas |
 | 16. Credenciales | ✅ C14 · 🟡 admin y cliente completables ya (D17) · ⏳ URLs y cuenta PayPal sandbox |
 | 17. Conclusiones | ⏳ Al final |
@@ -227,7 +230,7 @@ No se hace diagrama de clases (se usa DER). Casos de uso: un solo diagrama.
 | D15 | Falla de notificaciones | Timeout ≈3 s, registrar fallo, **no** detener la compra; la respuesta indica que el correo no se envió |
 | D16 | Acceso a pedido/pago | Dueño del pedido o admin (403 en otro caso) |
 | D17 | Usuarios semilla | `admin@mitienda.com / Admin2026!` · `cliente@test.com / Test2026!` |
-| D18 | Códigos HTTP | 200, 201, 204, 400, 401, 403, 404, 409, 422, 500, 503 |
+| D18 | Códigos HTTP | 200, 201, **202** (pago que requiere 3D Secure; agregado 30-oct), 204, 400, 401, 403, 404, 409, 422, 500, 503 |
 | D19 | Exportar PDF | jsPDF en el panel admin |
 | **D-PAGO** | **Quién inicia el cobro** | **Opción B.** El navegador tokeniza la tarjeta con Stripe.js (`payment_method_id`; la tarjeta **nunca** llega al servidor) → `POST /api/pedidos` (productos + método + token) → pedidos verifica stock con catálogo, crea pedido `pendiente` y **llama a pagos** (`/api/pagos/stripe`, reenviando el JWT) → Stripe → pagos guarda la referencia y notifica a pedidos (`pagado`) y a notificaciones. Respeta el enunciado y **no cambia el diagrama de secuencia aprobado**. Si Stripe pide acción adicional (3DS), se devuelve el `client_secret` al frontend. PayPal (dos pasos: crear orden y capturar) se encaja en el Bloque 4 dentro de `POST /api/pagos/paypal` |
 | D-PAGO (req.) | Concurrencia | Pedidos espera a pagos mientras pagos llama de vuelta a pedidos → cada servicio debe atender peticiones concurrentes: imágenes **`php:8.x-apache`** (varios procesos), **no** `php -S` |
@@ -250,18 +253,19 @@ No se hace diagrama de clases (se usa DER). Casos de uso: un solo diagrama.
 | **3. Interfaces** | Tienda pública Bootstrap 5 responsive; panel admin (Chart.js, pedidos, CRUD, `mailto:`) | Flujo completo desde el navegador | 6, 8 |
 | **4. APIs externas** | QR, OpenWeatherMap, Cloudinary, EmailJS, PayPal sandbox | Cada API visible en pantalla | 3, 4 |
 | **5. Pruebas** | Script automatizado (en contenedor) + colección Postman/Thunder; incluye 401, 403, replicación y tolerancia a fallos | Reporte en `docs/pruebas/` | 9, 10 |
-| **6. Despliegue Railway** | Un servicio Railway por contenedor, red privada, volúmenes MariaDB, variables; dominio público solo para el Gateway | URL pública funcionando; pruebas repetidas en producción | 7 |
+| **6. Despliegue VPS Hostinger** | Docker + Compose en el VPS, mismo `docker-compose.yml`, `.env` de producción, solo el Gateway publica puertos (80/443), volúmenes MariaDB | URL pública funcionando; pruebas repetidas en producción | 7 |
 | **7. Documentación final** | (Chat del Proyecto) Fig. 1, informe sin `[PENDIENTE]` salvo portada, capturas, PDF | Informe listo | 9 |
 
 **Si falta tiempo, recortar en este orden:** exportar a PDF → detalles visuales → Redis en sesiones (mantener caché y revocados). **Nunca recortar:** Docker, 5 servicios, JWT entre servicios, Stripe, PayPal, email, replicación, hosting.
 
-### 7.1 Notas de Railway (verificar en docs.railway.com antes de aplicar)
+### 7.1 Notas del VPS de Hostinger (verificar en la documentación de Hostinger antes de aplicar)
 
-- Railway **no ejecuta el `docker-compose.yml` tal cual**: un servicio por contenedor. El `docker-compose.yml` sigue siendo el entregable local.
-- Red privada (`<servicio>.railway.internal`); solo el Gateway con dominio público.
-- MariaDB Master y Slave con **volumen** y replicación por variables/scripts.
-- Revisar `resolver` de Nginx para nombres internos.
-- Costos: prueba gratuita (30 días, US$5 en créditos); Hobby US$5/mes. Revisar consumo.
+- Mismo `docker-compose.yml` que en local; solo cambia el `.env` (claves, `APP_URL`, opcionalmente `GATEWAY_PORT`).
+- Solo el Gateway publica puertos; MariaDB, Redis y los servicios quedan en la red interna `ecommerce`.
+- Firewall del VPS: abrir solo 22 (SSH), 80 y 443.
+- HTTPS: `[PENDIENTE]` dominio o IP pública y certificado (Let's Encrypt) — decidir en el Bloque 6.
+- Datos del VPS (plan, IP, acceso SSH): `[PENDIENTE — Anderson]`.
+- ~~Railway~~ descartado el 30-oct (A9).
 
 ### 7.2 Riesgos técnicos conocidos
 
@@ -276,11 +280,11 @@ No se hace diagrama de clases (se usa DER). Casos de uso: un solo diagrama.
 ## 8. Tareas de Anderson en paralelo (Claude no puede hacerlas)
 
 1. Copiar a la carpeta `proyecto-ecommerce`: `CLAUDE.md` (texto de Instrucciones del Proyecto), `docs/CONTINUIDAD_PROYECTO2.md`, `docs/Proyecto2_ECommerce_Distribuido.docx`, `docs/diagramas/`.
-2. **Para Bloque 1:** claves de prueba de Stripe (`pk_test_…`, `sk_test_…`) — pegarlas **directamente en `.env`**, nunca en el chat.
-3. Terminar la cuenta de Railway y dar acceso al repo.
+2. ~~Claves de prueba de Stripe en `.env`~~ ✅ (30-oct).
+3. ~~Railway~~ → Preparar el **VPS de Hostinger** (acceso SSH) antes del Bloque 6.
 4. **Para Bloque 4:** PayPal Developer (app sandbox + cuenta compradora), EmailJS (service, template, public/private key), Cloudinary (cloud name, API key/secret), OpenWeatherMap (API key).
-5. Definir el nombre comercial de la tienda (antes del Bloque 3).
-6. Revisar la lista de 20 productos que proponga Claude Code.
+5. ~~Definir el nombre comercial~~ ✅ NodoTec.
+6. ~~Revisar la lista de 20 productos~~ ✅ aprobada (30-oct).
 7. Indicar la redacción de 2.2 sobre quién desarrolla el proyecto (C1).
 8. Elaborar la portada del informe.
 9. Comandos manuales: **uno a la vez**, pegar la salida.
@@ -319,6 +323,8 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 - 2026-10-29 — Anderson asume todo el proyecto. Hostinger descartado; Railway elegido. Desarrollo con Claude Code. Archivo de continuidad creado.
 - 2026-10-29 — Aprobadas en bloque D1–D19, D-PAGO (opción B: pedidos llama a pagos; tarjeta tokenizada en el navegador; diagrama de secuencia sin cambios), D20 (descuento de stock al pagar) y D21 (USD). Confirmado que el negocio no repite el Proyecto 1. Revisión del .docx: C2–C6, C9, C11–C15 ya aplicadas; pendientes C1 (parcial), C7, C8, C10. Definida la división código (Claude Code) / documentación (chat del Proyecto) y el protocolo de continuidad (sección 12).
 - 2026-10-29 — **Bloque 0 terminado:** repo git inicializado (rama `main`), `.gitignore` (excluye `.env`, verificado con `git check-ignore`), `.gitattributes` (LF para .sh/.php/.sql/.conf/Dockerfile), `.env.example`, README inicial, estructura de carpetas de la sección 2.5; remoto `anderson-0112/proyecto-ecommerce` conectado y push hecho.
+- 2026-10-30 — Decisiones nuevas: hosting final **VPS de Hostinger** con el mismo `docker-compose.yml` (A9, reemplaza a Railway; aprobado por el catedrático); nombre **NodoTec** (A16); 20 productos aprobados (A17); rutas adicionales (A18); código **202** agregado a D18.
+- 2026-10-30 — **Bloque 1 terminado:** `docker compose up --build -d` levanta gateway (Nginx 1.27), 5 servicios PHP 8.3 + Apache y MariaDB 10.6 (4 BD aisladas, un usuario por servicio, 20 productos, usuarios semilla). JWT HS256 propio en auth-service, verificado por los demás vía `/api/auth/verify`. Compra con tarjeta 4242 desde el navegador (Stripe.js) → pedido `pagado`, `pi_…` guardado, stock descontado, QR generado. Pruebas automáticas `pruebas/prueba-bloque1.php`: 41/41. Tolerancia: con notificaciones detenido la compra termina (201, `pagado`, correo no enviado). Envío real de correo pendiente (Bloque 4).
 
 ---
 
