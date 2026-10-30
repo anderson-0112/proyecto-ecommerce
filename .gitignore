@@ -14,3 +14,6 @@ Thumbs.db
 
 # Copias temporales de Office
 ~$*
+
+# Informe del proyecto (se maneja fuera del repositorio)
+docs/Informe*.docx
