@@ -2,7 +2,7 @@
 # Plataforma E-Commerce Distribuida — orquestación local
 # Uso:  docker compose up --build -d
 # Un contenedor por servicio; todos en la red interna "ecommerce".
-# Solo el Gateway publica un puerto (80): es la única entrada, en local y en el VPS.
+# Solo el Gateway publica puertos (80 y 443): es la única entrada, en local y en el VPS.
 # URLs entre servicios y datos de conexión: variables de entorno con los valores
 # de Docker por defecto (${VAR:-valor}); se pueden cambiar en el .env sin tocar este archivo.
 # =============================================================
@@ -15,9 +15,15 @@ services:
     container_name: gateway
     ports:
       - "${GATEWAY_PORT:-80}:80"
+      - "${GATEWAY_HTTPS_PORT:-443}:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Local: nginx.conf (HTTP) · VPS: NGINX_CONF=nginx-https.conf (HTTPS con Let's Encrypt)
+      - ./nginx/${NGINX_CONF:-nginx.conf}:/etc/nginx/nginx.conf:ro
+      - ./nginx/rutas.conf:/etc/nginx/rutas.conf:ro
       - ./frontend:/usr/share/nginx/html:ro
+      # Certificados y reto HTTP-01 de Let's Encrypt (carpeta ignorada por Git)
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
     depends_on:
       - auth-service
       - catalogo-service
@@ -209,6 +215,15 @@ services:
       - redis-data:/data
     networks: [ecommerce]
     restart: unless-stopped
+
+  # ---------- Let's Encrypt (solo en el VPS; no arranca con "up") ----------
+  # Uso: docker compose run --rm certbot certonly ...  /  docker compose run --rm certbot renew
+  certbot:
+    image: certbot/certbot:v3.0.1
+    profiles: ["certbot"]
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
 
 networks:
   ecommerce:

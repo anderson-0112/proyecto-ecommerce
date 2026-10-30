@@ -17,3 +17,6 @@ Thumbs.db
 
 # Informe del proyecto (se maneja fuera del repositorio)
 docs/Informe*.docx
+
+# Certificados de Let's Encrypt (solo en el VPS)
+certbot/

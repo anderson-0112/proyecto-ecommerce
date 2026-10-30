@@ -2,6 +2,7 @@
 # =============================================================
 # Ejecuta TODAS las pruebas automáticas de NodoTec y genera el reporte.
 #   bash pruebas/ejecutar-pruebas.sh            (desde la raíz del proyecto)
+#   GATEWAY=https://nodotec.tech bash pruebas/ejecutar-pruebas.sh   (en el VPS, contra la URL pública)
 # Requisitos: los contenedores levantados (docker compose up --build -d).
 # En Windows se ejecuta con Git Bash. Las pruebas corren dentro de un
 # contenedor php:8.3-apache conectado a la red interna "ecommerce".
@@ -13,14 +14,16 @@ RAIZ_HOST=$(pwd -W 2>/dev/null || pwd)         # ruta del proyecto para montar e
 SALIDAS=docs/pruebas/salidas
 REPORTE=docs/pruebas/reporte-pruebas.md
 mkdir -p "$SALIDAS"
+# URL que usan las pruebas: el Gateway por la red interna (por defecto) o la URL pública
+export GATEWAY=${GATEWAY:-http://gateway}
 
 php_prueba() { # $1 = archivo de prueba, $2 = argumento opcional
-  docker run --rm --network ecommerce -v "$RAIZ_HOST/pruebas:/pruebas" php:8.3-apache php "/pruebas/$1" ${2:-}
+  docker run --rm --network ecommerce -e GATEWAY -v "$RAIZ_HOST/pruebas:/pruebas" php:8.3-apache php "/pruebas/$1" ${2:-}
 }
 
 esperar_servicios() { # espera a que el Gateway responda tras arrancar un contenedor
   for _ in $(seq 1 30); do
-    if docker run --rm --network ecommerce curlimages/curl:8.10.1 -sf http://gateway/api/catalogo/health >/dev/null 2>&1; then
+    if docker run --rm --network ecommerce curlimages/curl:8.10.1 -sf "$GATEWAY/api/catalogo/health" >/dev/null 2>&1; then
       sleep 2; return 0
     fi
     sleep 2
@@ -50,7 +53,7 @@ php_prueba prueba-bloque4.php > "$SALIDAS/bloque4-apis-externas.txt" 2>&1;    re
 
 echo "== Colección Postman (Newman) =="
 docker run --rm --network ecommerce -v "$RAIZ_HOST/docs/pruebas:/etc/newman" postman/newman:6-alpine \
-  run NodoTec.postman_collection.json --env-var base_url=http://gateway --reporters cli --color off > "$SALIDAS/newman-coleccion.txt" 2>&1
+  run NodoTec.postman_collection.json --env-var "base_url=$GATEWAY" --reporters cli --color off > "$SALIDAS/newman-coleccion.txt" 2>&1
 # Newman resume las aserciones en una tabla: "assertions │ <ejecutadas> │ <fallidas>"
 ASERCIONES=$(grep -E 'assertions' "$SALIDAS/newman-coleccion.txt" | grep -oE '[0-9]+' | head -2 | tr '\n' ' ')
 set -- $ASERCIONES
@@ -83,7 +86,7 @@ FECHA=$(date '+%Y-%m-%d %H:%M')
 {
   echo "# Reporte de pruebas — NodoTec"
   echo
-  echo "Generado automáticamente por \`pruebas/ejecutar-pruebas.sh\` el **$FECHA** (hora del equipo)."
+  echo "Generado automáticamente por \`pruebas/ejecutar-pruebas.sh\` el **$FECHA** (hora del equipo) contra **$GATEWAY**."
   echo
   echo "**Total: $TOTAL_OK comprobaciones correctas, $TOTAL_FALLOS con fallo.**"
   echo
