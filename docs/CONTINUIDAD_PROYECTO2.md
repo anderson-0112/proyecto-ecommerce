@@ -1,6 +1,6 @@
 # CONTINUIDAD — Proyecto Final No. 2: E-Commerce Distribuido (Tienda de Electrónica y Tecnología)
 
-> Archivo de traspaso. Última actualización: **30 de octubre de 2026 (hora de Guatemala)** — cierre del Bloque 6.
+> Archivo de traspaso. Última actualización: **30 de octubre de 2026, 16:15 (hora de Guatemala)** — copia unificada (repo + Proyecto) tras el **Bloque 6** e informe **v4**.
 > **Fuente de verdad de los requisitos:** `Proyecto2_ECommerce_Distribuido.docx` (enunciado del ingeniero).
 > Si este archivo y el enunciado se contradicen, **manda el enunciado**.
 > Ubicación: raíz del Proyecto en Claude (Contexto) **y** `docs/CONTINUIDAD_PROYECTO2.md` en el repositorio. Mantener ambas copias iguales (ver sección 12).
@@ -9,9 +9,9 @@
 
 ## 0. Estado en una línea
 
-Análisis ✅ · Informe redactado (faltan C1 parcial, C7, C8, C10 y datos de implementación) ✅ · 7 diagramas ✅ · Arquitectura (Fig. 1) ⏳ · Decisiones D1–D21 y D-PAGO ✅ · **Bloque 0 ✅ · Bloque 1 ✅ (compra 4242 → pedido `pagado`; 41/41 pruebas) · Bloque 2 ✅ (Master-Slave + Redis; 15/15) · Bloque 3 ✅ (tienda NodoTec + panel admin) · Bloque 4 ✅ (7 APIs externas visibles) · Bloque 5 ✅ (138/138 pruebas) · Bloque 6 ✅ (https://nodotec.tech; 138/138 en producción)** · Hosting: **VPS de Hostinger** (A9 actualizada, 30-oct).
+Análisis ✅ · **Informe v4** (C1–C15 + Bloques 0–6 incorporados) ✅ · 7 diagramas ✅ · Arquitectura (Fig. 1) ⏳ · Decisiones D1–D21 y D-PAGO ✅ · **Bloque 0 ✅ · Bloque 1 ✅ (compra 4242 → pedido `pagado`; 41/41 pruebas) · Bloque 2 ✅ (Master-Slave + Redis; 15/15) · Bloque 3 ✅ (tienda NodoTec + panel admin) · Bloque 4 ✅ (7 APIs externas visibles) · Bloque 5 ✅ (138/138 pruebas)** · **Bloque 6 ✅ (https://nodotec.tech y /admin/ con HTTPS; 138/138 en producción)** · Hosting: VPS de Hostinger (`179.197.91.34`).
 
-**Siguiente paso exacto:** **Bloque 7** (documentación final, chat del Proyecto): Fig. 1 de arquitectura, pasar al informe `docs/notas-implementacion.md` (Bloques 1–6, sección 14 = Bloque 6) y `docs/pruebas/produccion/`, capturas desde https://nodotec.tech, PDF. Anderson: compra manual en producción con 4242 y con PayPal sandbox (no automatizable) antes de la demo.
+**Siguiente paso exacto:** **Bloque 7** (documentación final, chat del Proyecto): Fig. 1 de arquitectura e inserción/actualización de las figuras (DER con campos finales, estados con D1/D2). Anderson: compra manual en producción con 4242 y con PayPal sandbox (no automatizable), capturas para la sección 15 desde https://nodotec.tech, portada (con **NodoTec**) y norma de citación; luego PDF final.
 
 ---
 
@@ -27,8 +27,8 @@ Análisis ✅ · Informe redactado (faltan C1 parcial, C7, C8, C10 y datos de im
 | Valor | 15 puntos |
 | **Fecha de entrega** | **31 de octubre de 2026** (−1 punto por cada día de atraso) |
 | Tipo de negocio | **Opción C: Tienda de Electrónica y Tecnología** — ✅ confirmado por Anderson que **no repite** el negocio del Proyecto 1 |
-| Tienda | **Ficticia**. Nombre comercial: **NodoTec** (definido por Anderson, 30-oct) |
-| Equipo | Desde el 29-oct, **Anderson realiza todo el proyecto** (código y documentación). |
+| Tienda | **Ficticia**. Nombre comercial: **NodoTec** (definido por Anderson; "cada servicio es un nodo independiente") |
+| Equipo | Integrantes: **Anderson Roberto Ixcotoyac López** y **Abdy Baltazar Aguare Santiago** (ambos se mencionan en el informe, 2.2). Desde el 29-oct, Anderson realiza el código y la documentación. |
 | Portada del informe | **La elabora Anderson personalmente.** No tocarla. |
 | Entorno de Anderson | Windows, VS Code, PowerShell, Docker Desktop, GitHub `anderson-0112` (2FA) |
 | Repositorio | https://github.com/anderson-0112/proyecto-ecommerce.git (rama `main`) |
@@ -136,7 +136,7 @@ Comando: `docker-compose up --build -d`.
 | A6 | El ingeniero **sí pide informe formal**, además de lo técnico | Anderson |
 | A7 | Estructura del informe de 19 secciones (sección 4) | Anderson |
 | A8 | Diagramas UML/ER aprobados (sección 5) | Anderson |
-| A9 | ~~Railway~~ → **VPS de Hostinger** (aprobado por el catedrático). Se despliega con el **mismo `docker-compose.yml`**; solo el Gateway publica puertos. URLs entre servicios y datos de conexión en variables de entorno con valores de Docker por defecto (`${VAR:-valor}`). Sigue descartado el hosting compartido | Anderson, 30-oct |
+| A9 | ~~Railway~~ (suspendió registros nuevos tras su incidente del 21-oct) y ~~Render~~ (BD de pago, 9 servicios, arranques en frío) → **VPS de Hostinger KVM 1, 1 mes** (autorizado por el catedrático por WhatsApp el 30-oct, 09:50; Anderson guarda captura). Se despliega con el **mismo `docker-compose.yml`**; solo el Gateway publica puertos. URLs entre servicios y datos de conexión en variables de entorno con valores de Docker por defecto (`${VAR:-valor}`). Sigue descartado el hosting compartido | Anderson, 30-oct |
 | A10 | Código con **Claude Code** + pruebas en **Docker Desktop** antes de desplegar | Anderson |
 | A11 | Diagramas como código (Mermaid) cuando sea posible; PNG/SVG para el informe | Aprobado |
 | A12 | **Todas las decisiones técnicas D1–D21 y D-PAGO (opción B)** de la sección 6 | Anderson, 29-oct |
@@ -146,47 +146,33 @@ Comando: `docker-compose up --build -d`.
 | A16 | Nombre comercial: **NodoTec** | Anderson, 30-oct |
 | A17 | 20 productos semilla aprobados (lista en `db/init-master.sql`; créditos de fotos en `docs/creditos-imagenes.md`) | Anderson, 30-oct |
 | A18 | Rutas adicionales aprobadas: `GET /api/catalogo/categorias`, `GET /api/pedidos` (historial), `GET /api/pagos/config` (clave pública de Stripe), `/api/<servicio>/health`; rutas internas `/api/*/interno/*` (bloqueadas en el Gateway): `catalogo/interno/verificar-stock`, `catalogo/interno/descontar-stock`, `pedidos/interno/{id}/pagado`, `notificaciones/interno/confirmacion-pedido` | Anderson, 30-oct |
+| A19 | El chat del Proyecto **actualiza el informe por iniciativa propia** cuando hay avances: genera la siguiente versión .docx (_v3, _v4…), la entrega, sube su texto al Contexto y actualiza CONTINUIDAD | Anderson, 29-oct |
+| A20 | Stripe: cuenta solo en sandbox con país Estados Unidos (Guatemala no está disponible en Stripe); nunca se activa para cobros reales | Anderson, 29-oct |
+| A21 | Rutas solo admin aprobadas: `GET /api/pedidos/clima` y `POST /api/catalogo/imagenes` (para no exponer claves de OpenWeather y Cloudinary en el navegador) | Anderson, 30-oct |
 
 ---
 
 ## 4. Estado del informe (documentación — se lleva en el chat del Proyecto)
 
-**Ubicación:** Claude Doc "Informe Proyecto Final No. 2 — E-Commerce Distribuido: Tienda de Electrónica y Tecnología" — https://claude.ai/artifact/QD8pPeaP2CxNVP8yfFWPiW (exportado también a .docx en el Proyecto).
+**Versión maestra:** `Informe Proyecto Final No. 2 — E-Commerce Distribuido_v4.docx` (30-oct), que guarda Anderson (fuera del repo: `docs/Informe*.docx` está en `.gitignore`). En el Contexto del Proyecto está su **texto** (el Proyecto solo admite texto). Cada nueva versión se genera sobre la anterior y se entrega como `_v4`, `_v5`… ⚠️ El Claude Doc https://claude.ai/artifact/QD8pPeaP2CxNVP8yfFWPiW está **desactualizado**; no usarlo.
 
-| Sección | Estado |
+| Sección | Estado (v4) |
 |---|---|
-| Portada | ⛔ **No tocar** — la hace Anderson |
-| 1. Introducción | ✅ (C15 aplicada) |
-| 2. Descripción | ✅ C2 aplicada · ⚠️ **C1 parcial**: falta la frase completa de negocio ficticio y cambiar "desarrollado por dos integrantes" |
-| 3. Planteamiento | ✅ (C3 y C4 aplicadas) |
-| 4. Justificación | ✅ · ⚠️ 4.2 "pago con tarjeta" → agregar PayPal |
-| 5. Usuarios | ⚠️ 5.2: "pagar con Stripe" → "pagar con Stripe o PayPal"; quitar la nota "[PENDIENTE: confirmar con el compañero…]"; insertar Fig. 4 |
-| 6. Objetivos | ✅ (C5 aplicada) |
-| 7. Alcance | ✅ C6 · ⚠️ **C7** y **C8** pendientes |
-| 8. Requerimientos | ✅ C9 · ⚠️ **C10 (RF-19)** pendiente |
-| 9. Tecnologías | 🟡 Completable ya: notificaciones = PHP 8 (D14), hosting = VPS de Hostinger. Versiones: ver `docs/notas-implementacion.md` (Bloque 1) |
-| 10. Arquitectura | 🟡 10.3 completable ya (D7) · 10.4 agregar descuento de stock (D20) y QR (D11) · 10.5 completable ya (D15) · Fig. 1 tras Bloque 2 |
-| 11. Base de datos | 🟡 Campos D5 completables ya; tipos y llaves tras el SQL final; replicación tras Bloque 2 |
-| 12. APIs externas | ✅ C11 aplicada · ⏳ cómo se integró cada API (tras Bloques 1 y 4) |
-| 13. Endpoints | ✅ C12 · 🟡 accesos completables ya (D16), agregar `POST /api/auth/logout` (D8) · ⏳ rutas CRUD finales, JSON y códigos (de `docs/notas-implementacion.md`) |
-| 14. Despliegue | 🟡 Completable ya: procedimiento y URLs en `docs/notas-implementacion.md` (Bloque 6) |
-| 15. Evidencias | ✅ C13 aplicada · ⚠️ falta cerrar el corchete en "[PENDIENTE: captura" · ⏳ capturas |
-| 16. Credenciales | ✅ C14 · 🟡 admin y cliente completables ya (D17) · URLs completables ya (https://nodotec.tech, /admin/) · ⏳ cuenta PayPal sandbox |
+| Portada | ⛔ **No tocar** — la hace Anderson. ⚠️ Debe poner ahí el nombre comercial **NodoTec** (campo `[PENDIENTE]` de la portada) |
+| 1–6 | ✅ (C1 con ambos integrantes y "NodoTec"; PayPal en 4.2 y 5.2) · ⏳ insertar Fig. 4 en 5.2 |
+| 7. Alcance | ✅ C7, C8 · 7.2 con limitaciones reales (Redis caído acepta tokens revocados; dirección más reciente) |
+| 8. Requerimientos | ✅ RF-19 |
+| 9. Tecnologías | ✅ versiones reales (local y producción), PHP 8.3 + Apache, Redis sin sesiones, hosting VPS de Hostinger |
+| 10. Arquitectura | ✅ 10.2 (notas de puertos, Apache, Redis), 10.3 (HS256, rutas internas), 10.4 (PayPal, idempotencia), 10.5 (5 escenarios) · ⏳ **Fig. 1** (arquitectura) y Figs. 2, 5–8 por insertar; Fig. 5 debe reflejar D1/D2 |
+| 11. Base de datos | ✅ tipos, llaves, usuarios por servicio, baja lógica, replicación y comprobación, 20 productos / 7 categorías · ⏳ Fig. 3 (DER) a revisar con campos finales |
+| 12. APIs | ✅ integración de las 6 APIs |
+| 13. Endpoints | ✅ rutas finales, accesos, ejemplo POST /api/pedidos |
+| 14. Despliegue | ✅ (v4) estructura real, requisitos, proveedor autorizado, servidor, dominio y certificado, 8 pasos del procedimiento, URLs |
+| 15. Evidencias | ✅ resultados de pruebas (138/138 local y en producción) · ⏳ **capturas** (Anderson, en producción) |
+| 16. Credenciales | ✅ completa (URLs, admin, cliente, Stripe, PayPal sandbox) |
 | 17. Conclusiones | ⏳ Al final |
 | 18. Referencias | ⏳ Documentación oficial usada; norma de citación `[PENDIENTE — Anderson]` |
 | 19. Anexos | ⏳ Opcional |
-
-Reemplazar en todo el informe "el compañero" por el responsable actual (Anderson).
-
-### 4.1 Correcciones aprobadas aún NO aplicadas (verificado contra el .docx el 29-oct)
-
-- **C1 (2.2):** agregar: *"La tienda es un negocio ficticio, creado con fines académicos para este proyecto. Su contexto y sus datos, como los productos, los usuarios y los pedidos, fueron definidos para simular el funcionamiento de un comercio real de electrónica y tecnología."* Y ajustar "desarrollado por dos integrantes" → `[PENDIENTE — redacción que indique Anderson]`.
-- **C7 (7.1 admin):** "consulta de detalle, cambio de estado (pendiente, preparando, enviado, entregado) y comunicación con el cliente."
-- **C8 (7.2):** eliminar el punto "Pagos con PayPal: no se implementan…".
-- **C10 (8.1):** nueva fila "RF-19 | Permitir al administrador comunicarse con el cliente desde la gestión de pedidos | Panel admin".
-- Menores: cerrar corchete en 15.2 (PayPal); 5.2 y 4.2 mencionar PayPal.
-
-C2, C3, C4, C5, C6, C9, C11, C12, C13, C14 y C15 **ya están aplicadas**.
 
 ---
 
@@ -263,8 +249,10 @@ No se hace diagrama de clases (se usa DER). Casos de uso: un solo diagrama.
 - Mismo `docker-compose.yml` que en local; solo cambia el `.env` (claves, `APP_URL`, opcionalmente `GATEWAY_PORT`).
 - Solo el Gateway publica puertos; MariaDB, Redis y los servicios quedan en la red interna `ecommerce`.
 - Firewall del VPS: abrir solo 22 (SSH), 80 y 443.
-- HTTPS: ✅ `nodotec.tech` + `www` con Let's Encrypt (Bloque 6).
-- VPS: Ubuntu 24.04, IP 179.197.91.34, SSH `root` solo con llave ed25519, proyecto en `/opt/proyecto-ecommerce`.
+- ✅ **Comprado el 30-oct:** KVM 1 (1 vCPU, 4 GB RAM, 50 GB NVMe), 1 mes = 7,99 € (**renueva sola a 17,49 €/mes → desactivar**). IPv4 `179.197.91.34`, Ubuntu 24.04.5 LTS, ubicación EE. UU., sin Docker Manager ni backups de pago.
+- Dominio gratis: **`nodotec.tech`** (1 año; renovación 59,99 € → desactivar). DNS A/AAAA al VPS; `www` → dominio principal.
+- ✅ **Desplegado (Bloque 6):** proyecto en `/opt/proyecto-ecommerce`; Docker 29.9 + Compose v5.6; UFW (22/80/443); SSH solo con llave; swap 2 GB; `.env` de producción (600) con claves nuevas; HTTPS Let's Encrypt (vence 28-ene-2027, renovación por cron); Gateway elige configuración con `NGINX_CONF` (`nginx.conf` local / `nginx-https.conf` producción; rutas en `nginx/rutas.conf`).
+- Acceso: `ssh root@179.197.91.34` con llave ed25519 de la PC de Anderson (`C:\Users\ander\.ssh\id_ed25519`, sin passphrase; probada el 30-oct). La llave privada nunca se comparte.
 - ~~Railway~~ descartado el 30-oct (A9).
 
 ### 7.2 Riesgos técnicos conocidos
@@ -279,15 +267,13 @@ No se hace diagrama de clases (se usa DER). Casos de uso: un solo diagrama.
 
 ## 8. Tareas de Anderson en paralelo (Claude no puede hacerlas)
 
-1. Copiar a la carpeta `proyecto-ecommerce`: `CLAUDE.md` (texto de Instrucciones del Proyecto), `docs/CONTINUIDAD_PROYECTO2.md`, `docs/Proyecto2_ECommerce_Distribuido.docx`, `docs/diagramas/`.
-2. ~~Claves de prueba de Stripe en `.env`~~ ✅ (30-oct).
-3. ~~Railway~~ → Preparar el **VPS de Hostinger** (acceso SSH) antes del Bloque 6.
-4. **Para Bloque 4:** PayPal Developer (app sandbox + cuenta compradora), EmailJS (service, template, public/private key), Cloudinary (cloud name, API key/secret), OpenWeatherMap (API key).
-5. ~~Definir el nombre comercial~~ ✅ NodoTec.
-6. ~~Revisar la lista de 20 productos~~ ✅ aprobada (30-oct).
-7. Indicar la redacción de 2.2 sobre quién desarrolla el proyecto (C1).
-8. Elaborar la portada del informe.
-9. Comandos manuales: **uno a la vez**, pegar la salida.
+1. ✅ Claves de Stripe, OpenWeather, Cloudinary, PayPal y EmailJS en `.env` (30-oct). EmailJS: servicio `service_j4mhvpi` (Gmail `anderlopez996@gmail.com`), plantilla "Order Confirmation" con variables `to_email`, `cliente_nombre`, `pedido_id`, `total`, `enlace_seguimiento`; API no-browser activada. **Límite: 200 envíos/mes** → no correr la batería completa de pruebas muchas veces.
+2. ✅ Cuenta compradora PayPal sandbox (ficticia): `sb-v6tr653517842@personal.example.com` / `(3:KDi2!`.
+3. ✅ VPS y dominio comprados; llave SSH configurada. ⏳ **Desactivar la renovación automática** del VPS y del dominio en Hostinger.
+4. ⏳ Portada del informe (con el nombre **NodoTec**).
+5. ⏳ Capturas en producción para la sección 15 (lista en el informe).
+6. ⏳ Norma de citación para las referencias (sección 18).
+7. Comandos manuales: **uno a la vez**, pegar la salida.
 
 ---
 
@@ -303,13 +289,14 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 
 - [x] URL pública de la tienda (catálogo sin registro) — https://nodotec.tech
 - [x] URL del panel admin + credenciales — https://nodotec.tech/admin/
-- [ ] Repo GitHub público con los 5 servicios, `docker-compose.yml`, README, sin secretos
-- [ ] Scripts SQL con 20+ productos con imágenes reales
+- [ ] Repo GitHub **público** con los 5 servicios, `docker-compose.yml`, README, sin secretos — ⏳ confirmar que el repositorio sea público
+- [x] Scripts SQL con 20+ productos con imágenes reales (`db/init-master.sql`, Cloudinary)
 - [ ] PDF del informe (portada de Anderson + diagramas + endpoints + capturas)
-- [ ] Credenciales: admin, cliente, tarjeta Stripe, cuenta PayPal sandbox
-- [ ] Evidencias de pruebas (reporte + colección)
-- [ ] Guía de defensa y guion de demo
-- [ ] Diagrama de arquitectura insertado
+- [x] Credenciales: admin, cliente, tarjeta Stripe, cuenta PayPal sandbox (informe §16)
+- [x] Evidencias de pruebas (reporte + colección; local y producción)
+- [x] Guía de defensa (`docs/guia-defensa.md`) · ⏳ ensayar el guion de demo
+- [ ] Diagrama de arquitectura insertado (Fig. 1)
+- [ ] Desactivar renovación automática del VPS y del dominio
 
 ---
 
@@ -322,6 +309,7 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 - 2026-09/10 — Diagramas aprobados: secuencia compra, DER, casos de uso, estados, autenticación, tolerancia a fallos; actividades entregado.
 - 2026-10-29 — Anderson asume todo el proyecto. Hostinger descartado; Railway elegido. Desarrollo con Claude Code. Archivo de continuidad creado.
 - 2026-10-29 — Aprobadas en bloque D1–D19, D-PAGO (opción B: pedidos llama a pagos; tarjeta tokenizada en el navegador; diagrama de secuencia sin cambios), D20 (descuento de stock al pagar) y D21 (USD). Confirmado que el negocio no repite el Proyecto 1. Revisión del .docx: C2–C6, C9, C11–C15 ya aplicadas; pendientes C1 (parcial), C7, C8, C10. Definida la división código (Claude Code) / documentación (chat del Proyecto) y el protocolo de continuidad (sección 12).
+- 2026-10-29 — Informe v2: C1 (integrantes Anderson y Abdy + negocio ficticio), C7, C8, C10 y secciones completadas con las decisiones aprobadas. Railway descartado (registros suspendidos); se evaluó Render. Regla A19 (informe por iniciativa propia).
 - 2026-10-29 — **Bloque 0 terminado:** repo git inicializado (rama `main`), `.gitignore` (excluye `.env`, verificado con `git check-ignore`), `.gitattributes` (LF para .sh/.php/.sql/.conf/Dockerfile), `.env.example`, README inicial, estructura de carpetas de la sección 2.5; remoto `anderson-0112/proyecto-ecommerce` conectado y push hecho.
 - 2026-10-30 — Decisiones nuevas: hosting final **VPS de Hostinger** con el mismo `docker-compose.yml` (A9, reemplaza a Railway; aprobado por el catedrático); nombre **NodoTec** (A16); 20 productos aprobados (A17); rutas adicionales (A18); código **202** agregado a D18.
 - 2026-10-30 — **Bloque 1 terminado:** `docker compose up --build -d` levanta gateway (Nginx 1.27), 5 servicios PHP 8.3 + Apache y MariaDB 10.6 (4 BD aisladas, un usuario por servicio, 20 productos, usuarios semilla). JWT HS256 propio en auth-service, verificado por los demás vía `/api/auth/verify`. Compra con tarjeta 4242 desde el navegador (Stripe.js) → pedido `pagado`, `pi_…` guardado, stock descontado, QR generado. Pruebas automáticas `pruebas/prueba-bloque1.php`: 41/41. Tolerancia: con notificaciones detenido la compra termina (201, `pagado`, correo no enviado). Envío real de correo pendiente (Bloque 4).
@@ -330,8 +318,10 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 - 2026-10-30 — **Bloque 3 terminado:** tienda pública NodoTec (Bootstrap 5, responsive): catálogo sin registro con destacados, filtros y paginación, detalle, carrito en el navegador, registro/login, checkout con Stripe Elements (reintento sobre el mismo pedido si se rechaza, D2; 409 abre el carrito, D3), confirmación con QR, mis pedidos y página de seguimiento (destino del QR). Panel `/admin/`: dashboard Chart.js (ventas día/7 días/mes, ventas por día, pedidos por estado; datos del Slave), gestión de pedidos (detalle, siguiente estado, `mailto:`), CRUD de productos (imagen por URL; Cloudinary en Bloque 4) y PDF con jsPDF. Sin rutas nuevas. Corregida la clave de idempotencia de Stripe (incluye la fecha del pedido). Gateway con `Cache-Control: no-cache`. Probado en navegador (escritorio y 375 px); regresión 41/41 y 15/15.
 - 2026-10-30 — **Bloque 4 terminado:** EmailJS desde notificaciones-service (Private Key como `accessToken`, timeout 2.5 s; correo real enviado); PayPal sandbox en dos pasos dentro de `POST /api/pagos/paypal` (crear orden 202 → aprobación en ventana de PayPal → captura), `POST /api/pedidos` acepta `metodo_pago: paypal`; Cloudinary: 20 fotos migradas (URLs del CDN en `init-master.sql`) y subida firmada desde el CRUD (**ruta nueva** `POST /api/catalogo/imagenes`, admin); OpenWeatherMap en el dashboard (**ruta nueva** `GET /api/pedidos/clima`, admin, ciudad configurable en `.env`). Pruebas `prueba-bloque4.php` 16/16; compra PayPal sandbox completa en navegador (pedido `pagado`). Las pruebas automáticas usan compradores `@example.com` para no enviar correos a `test.com`.
 - 2026-10-30 — **Bloque 5 terminado:** `pruebas/ejecutar-pruebas.sh` corre todo en contenedores (bloques 1, 2 y 4, colección Postman con Newman, `SHOW SLAVE STATUS` y 5 escenarios de tolerancia deteniendo notificaciones, pagos, catálogo, Slave y Redis) y genera `docs/pruebas/reporte-pruebas.md` + `docs/pruebas/salidas/`. Colección `docs/pruebas/NodoTec.postman_collection.json` (35 peticiones, 48 aserciones). Resultado: **138 correctas, 0 con fallo**. Las salidas sueltas `pruebas/resultado-*.txt` se reemplazaron por `docs/pruebas/salidas/`.
-- 2026-10-30 — Aprobadas por Anderson las rutas nuevas del Bloque 4: `GET /api/pedidos/clima` y `POST /api/catalogo/imagenes` (solo admin).
+- 2026-10-30 — VPS Hostinger KVM 1 comprado (`179.197.91.34`, Ubuntu 24.04 LTS), dominio `nodotec.tech`, acceso SSH con llave. Rutas `GET /api/pedidos/clima` y `POST /api/catalogo/imagenes` aprobadas (A21). Copias de CONTINUIDAD del repo y del Proyecto unificadas (A19–A21 renumeradas).
+- 2026-10-30 — Informe v3: incorporados los Bloques 0–5 (versiones, notas de arquitectura, 5 escenarios de tolerancia, tipos y llaves, replicación, integración de las 6 APIs, rutas finales con ejemplo, requisitos de despliegue, resultados 138/138, cuenta PayPal sandbox). Pendiente v4: despliegue, URLs, figuras y capturas.
 - 2026-10-30 — **Bloque 6 terminado:** desplegado en el VPS de Hostinger (Ubuntu 24.04, 179.197.91.34) con el mismo `docker-compose.yml`: **https://nodotec.tech** y **/admin/**. DNS ya correcto (A y AAAA al VPS). Docker 29.9 + Compose v5.6 desde el repositorio oficial, UFW (22/80/443), SSH solo con llave, swap 2 GB. `.env` de producción con claves nuevas (`openssl rand`) y `APP_URL=https://nodotec.tech`. HTTPS Let's Encrypt (HTTP-01, certbot en contenedor con perfil; renovación por cron, `--dry-run` OK; vence 28-ene-2027). Gateway: rutas movidas a `nginx/rutas.conf`; `nginx-https.conf` nuevo (80→301 HTTPS, `www`→dominio); compose publica 443 y elige config con `NGINX_CONF`. `ejecutar-pruebas.sh` acepta `GATEWAY`. Batería completa una vez contra la URL pública: **138/138** (`docs/pruebas/produccion/`).
+- 2026-10-30 — Informe v4: sección 14 completa (estructura real, servidor, dominio y certificado, 8 pasos, URLs), URLs en §16, pruebas en producción en §15.4; quitado el resaltado amarillo de títulos sin pendientes y alineado el bloque de código de 14.1.
 
 ---
 
@@ -342,7 +332,7 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 | Dónde | Qué se hace |
 |---|---|
 | **Claude Code** (carpeta `proyecto-ecommerce`) | Código, Docker, SQL, pruebas, despliegue, README, `docs/guia-defensa.md`, `docs/notas-implementacion.md` |
-| **Chat del Proyecto** (claude.ai) | Informe (Claude Doc), diagramas (incluida Fig. 1), correcciones C1–C15, capturas, conclusiones, referencias, PDF |
+| **Chat del Proyecto** (claude.ai) | Informe (.docx, versión maestra; texto en el Contexto), diagramas (incluida Fig. 1), correcciones C1–C15, capturas, conclusiones, referencias, PDF |
 
 **Sincronización entre ambos**
 
