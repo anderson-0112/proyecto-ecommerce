@@ -1,0 +1,25 @@
+{
+  "theme": "neutral",
+  "look": "classic",
+  "layout": "dagre",
+  "themeVariables": {
+    "fontFamily": "Liberation Sans",
+    "noteBkgColor": "#fff4e5",
+    "noteTextColor": "#222222",
+    "noteBorderColor": "#b5832c"
+  },
+  "state": {
+    "nodeSpacing": 60,
+    "rankSpacing": 60
+  },
+  "sequence": {
+    "mirrorActors": false,
+    "noteFontFamily": "Liberation Sans",
+    "messageFontFamily": "Liberation Sans",
+    "actorFontFamily": "Liberation Sans",
+    "useMaxWidth": false
+  },
+  "flowchart": {
+    "useMaxWidth": false
+  }
+}

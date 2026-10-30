@@ -1,4 +1,4 @@
-flowchart TD
+flowchart LR
     I(( )):::inicio --> A1
 
     subgraph CL[Cliente]
@@ -6,22 +6,23 @@ flowchart TD
         A2(Elegir método de pago:<br/>Stripe o PayPal)
         A3(Confirmar el pedido)
         A4(Iniciar sesión o registrarse)
+        A5(Reintentar el pago<br/>del mismo pedido)
     end
 
     subgraph PL[Plataforma]
         D1{¿Sesión<br/>iniciada?}
         P1(Verificar stock<br/>catalogo-service)
         D2{¿Hay stock<br/>suficiente?}
-        P2(Informar falta de stock<br/>acción PENDIENTE):::pend
+        P2(Responder 409 Conflict:<br/>el cliente vuelve al carrito)
         P3(Registrar pedido<br/>estado: pendiente)
         D3{¿Método<br/>de pago?}
         P4(Cobrar con Stripe<br/>sandbox)
         P5(Cobrar con PayPal<br/>sandbox)
         D4{¿Pago<br/>aprobado?}
-        P6(Acción ante pago rechazado<br/>PENDIENTE):::pend
-        P7(Actualizar pedido<br/>estado: pagado)
-        P8(Enviar email de confirmación<br/>EmailJS)
-        P9(Mostrar confirmación<br/>del pedido)
+        P6(El pedido sigue<br/>pendiente)
+        P7(Actualizar pedido a pagado,<br/>descontar stock y generar QR)
+        P8(Enviar correo de confirmación<br/>EmailJS; si falla, se registra<br/>y la compra continúa)
+        P9(Mostrar confirmación<br/>del pedido con QR)
     end
 
     A1 --> A2 --> A3 --> D1
@@ -31,11 +32,10 @@ flowchart TD
     D2 -- Sí --> P3 --> D3
     D3 -- Stripe --> P4 --> D4
     D3 -- PayPal --> P5 --> D4
-    D4 -- No --> P6 --> F2(((" "))):::fin
+    D4 -- No --> P6 --> A5 --> D3
     D4 -- Sí --> P7 --> P8 --> P9 --> F3(((" "))):::fin
 
     classDef inicio fill:#1f2a36,stroke:#1f2a36,color:#fff
     classDef fin fill:#1f2a36,stroke:#1f2a36,stroke-width:2px,color:#fff
-    classDef pend stroke-dasharray:6 4,stroke:#b03a2e,stroke-width:2px,fill:#fff7f5,color:#b03a2e
     style CL fill:#eef5f9,stroke:#2f6b8a,stroke-width:2px
     style PL fill:#f7f9fb,stroke:#3a4a5c,stroke-width:2px

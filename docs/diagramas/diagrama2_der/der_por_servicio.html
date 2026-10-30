@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DER por microservicio</title>
+<title>Diagrama entidad-relación por microservicio</title>
 <style>
   :root { --ink:#1f2a36; --muted:#5b6673; --line:#d5dbe1; --paper:#ffffff; --bg:#eef1f4; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--ink); font-family:"Segoe UI", Arial, Helvetica, sans-serif; line-height:1.5; }
-  header, main { max-width:1450px; margin:0 auto; padding:24px; }
+  header, main { max-width:1100px; margin:0 auto; padding:24px; }
   h1 { font-size:1.6rem; margin:0 0 4px; }
   header p { margin:0; color:var(--muted); max-width:75ch; }
   figure { margin:0; background:var(--paper); border:1px solid var(--line); border-radius:6px; padding:16px; overflow-x:auto; }
-  figure svg { max-width:none; height:auto; display:block; margin:0 auto; }
+  figure svg { max-width:100%; height:auto; display:block; margin:0 auto; }
   figcaption { margin-top:12px; color:var(--muted); font-size:.9rem; }
   section { margin-top:24px; max-width:80ch; }
   h2 { font-size:1.1rem; margin:0 0 8px; }
@@ -23,31 +23,287 @@
 <body>
 <header>
   <h1>Diagrama entidad-relación por microservicio</h1>
-  <p>Plataforma E-Commerce Distribuida, Tienda de Electrónica y Tecnología. Proyecto Final No. 2, Desarrollo de Aplicaciones Web, UMG 2026.</p>
+  <p>Plataforma E-Commerce Distribuida NodoTec, Tienda de Electrónica y Tecnología. Proyecto Final No. 2, Desarrollo de Aplicaciones Web, UMG 2026.</p>
 </header>
 <main>
   <figure>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" font-family="Arial, Helvetica, sans-serif"><rect width="1400" height="900" fill="#ffffff"/><rect x="30" y="70" width="400" height="290" rx="8" fill="#eef5f9" stroke="#2f6b8a" stroke-width="2"/><text x="44" y="94" font-size="16" text-anchor="start" font-weight="bold" fill="#2f6b8a">auth_db</text><text x="44" y="112" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6673">auth-service</text><rect x="460" y="70" width="910" height="290" rx="8" fill="#eff7f1" stroke="#3f7d4f" stroke-width="2"/><text x="474" y="94" font-size="16" text-anchor="start" font-weight="bold" fill="#3f7d4f">catalogo_db</text><text x="474" y="112" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6673">catalogo-service</text><rect x="30" y="390" width="920" height="400" rx="8" fill="#fbf5ea" stroke="#8a5a00" stroke-width="2"/><text x="44" y="414" font-size="16" text-anchor="start" font-weight="bold" fill="#8a5a00">pedidos_db</text><text x="44" y="432" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6673">pedidos-service</text><rect x="980" y="390" width="390" height="400" rx="8" fill="#f8eff6" stroke="#7a3f6e" stroke-width="2"/><text x="994" y="414" font-size="16" text-anchor="start" font-weight="bold" fill="#7a3f6e">pagos_db</text><text x="994" y="432" font-size="12" text-anchor="start" font-weight="normal" fill="#5b6673">pagos-service</text><text x="30" y="38" font-size="20" text-anchor="start" font-weight="bold" fill="#1f2a36">Modelo de datos por microservicio</text><text x="30" y="58" font-size="13" text-anchor="start" font-weight="normal" fill="#5b6673">Cada servicio administra su propia base de datos. Campos según el enunciado; tipos de datos [PENDIENTE].</text><rect x="80" y="130" width="250" height="174" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.5"/><rect x="80" y="130" width="250" height="30" fill="#3a4a5c"/><text x="90" y="150" font-size="14" text-anchor="start" font-weight="bold" fill="#ffffff">usuarios</text><text x="90" y="176" font-size="11" text-anchor="start" font-weight="bold" fill="#8a5a00">PK</text><text x="126" y="176" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">id</text><line x1="80" y1="184" x2="330" y2="184" stroke="#e1e6eb"/><text x="126" y="200" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">nombre</text><line x1="80" y1="208" x2="330" y2="208" stroke="#e1e6eb"/><text x="126" y="224" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">email</text><line x1="80" y1="232" x2="330" y2="232" stroke="#e1e6eb"/><text x="126" y="248" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">password_hash</text><line x1="80" y1="256" x2="330" y2="256" stroke="#e1e6eb"/><text x="126" y="272" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">rol</text><line x1="80" y1="280" x2="330" y2="280" stroke="#e1e6eb"/><text x="126" y="296" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">created_at</text><rect x="540" y="130" width="250" height="54" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.5" stroke-dasharray="6 4"/><rect x="540" y="130" width="250" height="30" fill="#3a4a5c"/><text x="550" y="150" font-size="14" text-anchor="start" font-weight="bold" fill="#ffffff">categorias</text><text x="586" y="176" font-size="13" text-anchor="start" font-weight="normal" fill="#b03a2e" font-style="italic">[campos PENDIENTE]</text><rect x="1060" y="130" width="250" height="222" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.5"/><rect x="1060" y="130" width="250" height="30" fill="#3a4a5c"/><text x="1070" y="150" font-size="14" text-anchor="start" font-weight="bold" fill="#ffffff">productos</text><text x="1070" y="176" font-size="11" text-anchor="start" font-weight="bold" fill="#8a5a00">PK</text><text x="1106" y="176" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">id</text><line x1="1060" y1="184" x2="1310" y2="184" stroke="#e1e6eb"/><text x="1106" y="200" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">nombre</text><line x1="1060" y1="208" x2="1310" y2="208" stroke="#e1e6eb"/><text x="1106" y="224" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">precio</text><line x1="1060" y1="232" x2="1310" y2="232" stroke="#e1e6eb"/><text x="1106" y="248" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">stock</text><line x1="1060" y1="256" x2="1310" y2="256" stroke="#e1e6eb"/><text x="1106" y="272" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">imagen_url</text><line x1="1060" y1="280" x2="1310" y2="280" stroke="#e1e6eb"/><text x="1106" y="296" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">destacado</text><line x1="1060" y1="304" x2="1310" y2="304" stroke="#e1e6eb"/><text x="1106" y="320" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">activo</text><line x1="1060" y1="328" x2="1310" y2="328" stroke="#e1e6eb"/><text x="1106" y="344" font-size="13" text-anchor="start" font-weight="normal" fill="#b03a2e" font-style="italic">[FK categoría PENDIENTE]</text><rect x="80" y="450" width="250" height="54" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.5" stroke-dasharray="6 4"/><rect x="80" y="450" width="250" height="30" fill="#3a4a5c"/><text x="90" y="470" font-size="14" text-anchor="start" font-weight="bold" fill="#ffffff">clientes</text><text x="126" y="496" font-size="13" text-anchor="start" font-weight="normal" fill="#b03a2e" font-style="italic">[campos PENDIENTE]</text><rect x="380" y="450" width="250" height="150" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.5"/><rect x="380" y="450" width="250" height="30" fill="#3a4a5c"/><text x="390" y="470" font-size="14" text-anchor="start" font-weight="bold" fill="#ffffff">pedidos</text><text x="390" y="496" font-size="11" text-anchor="start" font-weight="bold" fill="#8a5a00">PK</text><text x="426" y="496" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">id</text><line x1="380" y1="504" x2="630" y2="504" stroke="#e1e6eb"/><text x="390" y="520" font-size="11" text-anchor="start" font-weight="bold" fill="#2f6b8a">FK</text><text x="426" y="520" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">id_cliente</text><line x1="380" y1="528" x2="630" y2="528" stroke="#e1e6eb"/><text x="426" y="544" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">total</text><line x1="380" y1="552" x2="630" y2="552" stroke="#e1e6eb"/><text x="426" y="568" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">estado</text><line x1="380" y1="576" x2="630" y2="576" stroke="#e1e6eb"/><text x="426" y="592" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">fecha</text><rect x="680" y="450" width="250" height="54" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.5" stroke-dasharray="6 4"/><rect x="680" y="450" width="250" height="30" fill="#3a4a5c"/><text x="690" y="470" font-size="14" text-anchor="start" font-weight="bold" fill="#ffffff">detalle_pedidos</text><text x="726" y="496" font-size="13" text-anchor="start" font-weight="normal" fill="#b03a2e" font-style="italic">[campos PENDIENTE]</text><rect x="80" y="640" width="250" height="54" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.5" stroke-dasharray="6 4"/><rect x="80" y="640" width="250" height="30" fill="#3a4a5c"/><text x="90" y="660" font-size="14" text-anchor="start" font-weight="bold" fill="#ffffff">direcciones</text><text x="126" y="686" font-size="13" text-anchor="start" font-weight="normal" fill="#b03a2e" font-style="italic">[campos PENDIENTE]</text><text x="80" y="740" font-size="12" text-anchor="start" font-weight="normal" fill="#b03a2e" font-style="italic">Relación de direcciones: [PENDIENTE]</text><rect x="1030" y="450" width="250" height="198" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.5"/><rect x="1030" y="450" width="250" height="30" fill="#3a4a5c"/><text x="1040" y="470" font-size="14" text-anchor="start" font-weight="bold" fill="#ffffff">pagos</text><text x="1040" y="496" font-size="11" text-anchor="start" font-weight="bold" fill="#8a5a00">PK</text><text x="1076" y="496" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">id</text><line x1="1030" y1="504" x2="1280" y2="504" stroke="#e1e6eb"/><text x="1076" y="520" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">id_pedido</text><line x1="1030" y1="528" x2="1280" y2="528" stroke="#e1e6eb"/><text x="1076" y="544" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">monto</text><line x1="1030" y1="552" x2="1280" y2="552" stroke="#e1e6eb"/><text x="1076" y="568" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">metodo</text><line x1="1030" y1="576" x2="1280" y2="576" stroke="#e1e6eb"/><text x="1076" y="592" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">referencia_stripe</text><line x1="1030" y1="600" x2="1280" y2="600" stroke="#e1e6eb"/><text x="1076" y="616" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">estado</text><line x1="1030" y1="624" x2="1280" y2="624" stroke="#e1e6eb"/><text x="1076" y="640" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2a36">fecha_pago</text><path d="M380,516.0 L352,516.0 L352,492.0 L330,492.0" fill="none" stroke="#3a4a5c" stroke-width="2"/><text x="374" y="510.0" font-size="13" text-anchor="end" font-weight="bold" fill="#1f2a36">N</text><text x="336" y="486.0" font-size="13" text-anchor="start" font-weight="bold" fill="#1f2a36">1</text><line x1="1060" y1="172.0" x2="790" y2="172.0" stroke="#3a4a5c" stroke-width="2" stroke-dasharray="7 5"/><text x="1052" y="166.0" font-size="13" text-anchor="end" font-weight="bold" fill="#1f2a36">N</text><text x="798" y="166.0" font-size="13" text-anchor="start" font-weight="bold" fill="#1f2a36">1</text><line x1="680" y1="492.0" x2="630" y2="492.0" stroke="#3a4a5c" stroke-width="2" stroke-dasharray="7 5"/><text x="672" y="486.0" font-size="13" text-anchor="end" font-weight="bold" fill="#1f2a36">N</text><text x="638" y="486.0" font-size="13" text-anchor="start" font-weight="bold" fill="#1f2a36">1</text><path d="M1030,516.0 L965,516.0 L965,760 L505.0,760 L505.0,600" fill="none" stroke="#7a3f6e" stroke-width="2" stroke-dasharray="2 4"/><text x="640" y="778" font-size="12" text-anchor="middle" font-weight="normal" fill="#7a3f6e">pagos.id_pedido hace referencia a pedidos.id (entre servicios, sin FK)</text><text x="30" y="830" font-size="14" text-anchor="start" font-weight="bold" fill="#1f2a36">Leyenda</text><line x1="30" y1="852" x2="90" y2="852" stroke="#3a4a5c" stroke-width="2"/><text x="100" y="856" font-size="12" text-anchor="start" font-weight="normal" fill="#1f2a36">Llave foránea indicada en el enunciado</text><line x1="380" y1="852" x2="440" y2="852" stroke="#3a4a5c" stroke-width="2" stroke-dasharray="7 5"/><text x="450" y="856" font-size="12" text-anchor="start" font-weight="normal" fill="#1f2a36">Relación esperada; campo FK [PENDIENTE]</text><line x1="760" y1="852" x2="820" y2="852" stroke="#7a3f6e" stroke-width="2" stroke-dasharray="2 4"/><text x="830" y="856" font-size="12" text-anchor="start" font-weight="normal" fill="#1f2a36">Referencia lógica entre bases de datos (vía API)</text><rect x="1150" y="842" width="30" height="18" fill="#fff" stroke="#3a4a5c" stroke-dasharray="6 4"/><text x="1188" y="856" font-size="12" text-anchor="start" font-weight="normal" fill="#1f2a36">Tabla con campos [PENDIENTE]</text></svg>
-    <figcaption>Figura. Bases de datos aisladas por servicio, con las tablas y campos definidos en el enunciado.</figcaption>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1720 800" width="1720" height="800" font-family="Arial, 'Liberation Sans', Helvetica, sans-serif">
+<defs>
+<marker id="m-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f2a36"/></marker>
+<marker id="m-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7a3f6e"/></marker>
+<marker id="m-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3f7d4f"/></marker>
+<marker id="m-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8a5a00"/></marker>
+<marker id="m-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f6b8a"/></marker>
+<marker id="m-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5b6673"/></marker>
+</defs>
+<rect width="1720" height="800" fill="#ffffff"/>
+<text x="20" y="34" font-size="20" font-weight="bold" fill="#1f2a36" text-anchor="start">Modelo de datos por microservicio (db/init-master.sql)</text>
+<text x="20" y="56" font-size="12" font-weight="normal" fill="#5b6673" text-anchor="start">Cada servicio tiene su propia base de datos en MariaDB y un usuario con permisos solo sobre ella. Las llaves foráneas existen únicamente dentro de cada base.</text>
+<rect x="20" y="80" width="330" height="492" rx="10" fill="#fbfbfc" stroke="#3a4a5c" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="34" y="104" font-size="14" font-weight="bold" fill="#3a4a5c" text-anchor="start">auth_db</text>
+<text x="34" y="122" font-size="11" font-weight="normal" fill="#5b6673" text-anchor="start">auth-service · usuario auth_user</text>
+<rect x="36" y="140" width="298" height="170" rx="6" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.8"/>
+<path d="M36,172 V146 Q36,140 42,140 H328 Q334,140 334,146 V172 Z" fill="#3a4a5c"/>
+<text x="48" y="161" font-size="13.5" font-weight="bold" fill="#ffffff" text-anchor="start">usuarios</text>
+<rect x="44" y="177" width="22" height="13" rx="3" fill="#1f2a36"/>
+<text x="55" y="187" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
+<text x="98" y="188" font-size="11.5" font-weight="bold" fill="#1f2a36" text-anchor="start">id</text>
+<text x="324" y="188" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED AI</text>
+<line x1="36" y1="195" x2="334" y2="195" stroke="#e1e6eb" stroke-width="1"/>
+<text x="98" y="211" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">nombre</text>
+<text x="324" y="211" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(100)</text>
+<line x1="36" y1="218" x2="334" y2="218" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="44" y="223" width="22" height="13" rx="3" fill="#e1e6eb"/>
+<text x="55" y="233" font-size="8.5" font-weight="bold" fill="#1f2a36" text-anchor="middle">UQ</text>
+<text x="98" y="234" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">email</text>
+<text x="324" y="234" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(150)</text>
+<line x1="36" y1="241" x2="334" y2="241" stroke="#e1e6eb" stroke-width="1"/>
+<text x="98" y="257" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">password_hash</text>
+<text x="324" y="257" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(255) · bcrypt</text>
+<line x1="36" y1="264" x2="334" y2="264" stroke="#e1e6eb" stroke-width="1"/>
+<text x="98" y="280" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">rol</text>
+<text x="324" y="280" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">ENUM(cliente, admin)</text>
+<line x1="36" y1="287" x2="334" y2="287" stroke="#e1e6eb" stroke-width="1"/>
+<text x="98" y="303" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">created_at</text>
+<text x="324" y="303" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">DATETIME</text>
+<rect x="365" y="80" width="345" height="492" rx="10" fill="#fbfbfc" stroke="#3a4a5c" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="379" y="104" font-size="14" font-weight="bold" fill="#3a4a5c" text-anchor="start">catalogo_db</text>
+<text x="379" y="122" font-size="11" font-weight="normal" fill="#5b6673" text-anchor="start">catalogo-service · usuario catalogo_user</text>
+<rect x="392" y="140" width="300" height="101" rx="6" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.8"/>
+<path d="M392,172 V146 Q392,140 398,140 H686 Q692,140 692,146 V172 Z" fill="#3a4a5c"/>
+<text x="404" y="161" font-size="13.5" font-weight="bold" fill="#ffffff" text-anchor="start">categorias</text>
+<rect x="400" y="177" width="22" height="13" rx="3" fill="#1f2a36"/>
+<text x="411" y="187" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
+<text x="454" y="188" font-size="11.5" font-weight="bold" fill="#1f2a36" text-anchor="start">id</text>
+<text x="682" y="188" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED AI</text>
+<line x1="392" y1="195" x2="692" y2="195" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="400" y="200" width="22" height="13" rx="3" fill="#e1e6eb"/>
+<text x="411" y="210" font-size="8.5" font-weight="bold" fill="#1f2a36" text-anchor="middle">UQ</text>
+<text x="454" y="211" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">nombre</text>
+<text x="682" y="211" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(80)</text>
+<line x1="392" y1="218" x2="692" y2="218" stroke="#e1e6eb" stroke-width="1"/>
+<text x="454" y="234" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">descripcion</text>
+<text x="682" y="234" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(255)</text>
+<rect x="392" y="270" width="300" height="239" rx="6" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.8"/>
+<path d="M392,302 V276 Q392,270 398,270 H686 Q692,270 692,276 V302 Z" fill="#3a4a5c"/>
+<text x="404" y="291" font-size="13.5" font-weight="bold" fill="#ffffff" text-anchor="start">productos</text>
+<rect x="400" y="307" width="22" height="13" rx="3" fill="#1f2a36"/>
+<text x="411" y="317" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
+<text x="454" y="318" font-size="11.5" font-weight="bold" fill="#1f2a36" text-anchor="start">id</text>
+<text x="682" y="318" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED AI</text>
+<line x1="392" y1="325" x2="692" y2="325" stroke="#e1e6eb" stroke-width="1"/>
+<text x="454" y="341" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">nombre</text>
+<text x="682" y="341" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(150)</text>
+<line x1="392" y1="348" x2="692" y2="348" stroke="#e1e6eb" stroke-width="1"/>
+<text x="454" y="364" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">descripcion</text>
+<text x="682" y="364" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">TEXT</text>
+<line x1="392" y1="371" x2="692" y2="371" stroke="#e1e6eb" stroke-width="1"/>
+<text x="454" y="387" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">precio</text>
+<text x="682" y="387" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">DECIMAL(10,2) · USD</text>
+<line x1="392" y1="394" x2="692" y2="394" stroke="#e1e6eb" stroke-width="1"/>
+<text x="454" y="410" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">stock</text>
+<text x="682" y="410" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED</text>
+<line x1="392" y1="417" x2="692" y2="417" stroke="#e1e6eb" stroke-width="1"/>
+<text x="454" y="433" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">imagen_url</text>
+<text x="682" y="433" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(500)</text>
+<line x1="392" y1="440" x2="692" y2="440" stroke="#e1e6eb" stroke-width="1"/>
+<text x="454" y="456" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">destacado</text>
+<text x="682" y="456" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">TINYINT(1)</text>
+<line x1="392" y1="463" x2="692" y2="463" stroke="#e1e6eb" stroke-width="1"/>
+<text x="454" y="479" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">activo</text>
+<text x="682" y="479" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">TINYINT(1)</text>
+<line x1="392" y1="486" x2="692" y2="486" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="400" y="491" width="22" height="13" rx="3" fill="#2f6b8a"/>
+<text x="411" y="501" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+<text x="454" y="502" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">categoria_id</text>
+<text x="682" y="502" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED</text>
+<polyline points="392,183.5 378,183.5 378,497.5 392,497.5" fill="none" stroke="#2f6b8a" stroke-width="1.8"/>
+<text x="381" y="177.5" font-size="11" font-weight="bold" fill="#2f6b8a" text-anchor="start">1</text>
+<text x="381" y="491.5" font-size="11" font-weight="bold" fill="#2f6b8a" text-anchor="start">N</text>
+<rect x="725" y="80" width="640" height="492" rx="10" fill="#fbfbfc" stroke="#3a4a5c" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="739" y="104" font-size="14" font-weight="bold" fill="#3a4a5c" text-anchor="start">pedidos_db</text>
+<text x="739" y="122" font-size="11" font-weight="normal" fill="#5b6673" text-anchor="start">pedidos-service · usuario pedidos_user</text>
+<rect x="752" y="140" width="280" height="147" rx="6" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.8"/>
+<path d="M752,172 V146 Q752,140 758,140 H1026 Q1032,140 1032,146 V172 Z" fill="#3a4a5c"/>
+<text x="764" y="161" font-size="13.5" font-weight="bold" fill="#ffffff" text-anchor="start">clientes</text>
+<rect x="760" y="177" width="22" height="13" rx="3" fill="#1f2a36"/>
+<text x="771" y="187" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
+<text x="814" y="188" font-size="11.5" font-weight="bold" fill="#1f2a36" text-anchor="start">id</text>
+<text x="1022" y="188" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED AI</text>
+<line x1="752" y1="195" x2="1032" y2="195" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="760" y="200" width="22" height="13" rx="3" fill="#e1e6eb"/>
+<text x="771" y="210" font-size="8.5" font-weight="bold" fill="#1f2a36" text-anchor="middle">UQ</text>
+<rect x="785" y="200" width="22" height="13" rx="3" fill="#7a3f6e"/>
+<text x="796" y="210" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">RL</text>
+<text x="814" y="211" font-size="11.5" font-weight="normal" fill="#7a3f6e" text-anchor="start">id_usuario</text>
+<text x="1022" y="211" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED</text>
+<line x1="752" y1="218" x2="1032" y2="218" stroke="#e1e6eb" stroke-width="1"/>
+<text x="814" y="234" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">nombre</text>
+<text x="1022" y="234" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(100)</text>
+<line x1="752" y1="241" x2="1032" y2="241" stroke="#e1e6eb" stroke-width="1"/>
+<text x="814" y="257" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">email</text>
+<text x="1022" y="257" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(150)</text>
+<line x1="752" y1="264" x2="1032" y2="264" stroke="#e1e6eb" stroke-width="1"/>
+<text x="814" y="280" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">telefono</text>
+<text x="1022" y="280" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(30)</text>
+<rect x="752" y="330" width="280" height="147" rx="6" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.8"/>
+<path d="M752,362 V336 Q752,330 758,330 H1026 Q1032,330 1032,336 V362 Z" fill="#3a4a5c"/>
+<text x="764" y="351" font-size="13.5" font-weight="bold" fill="#ffffff" text-anchor="start">direcciones</text>
+<rect x="760" y="367" width="22" height="13" rx="3" fill="#1f2a36"/>
+<text x="771" y="377" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
+<text x="814" y="378" font-size="11.5" font-weight="bold" fill="#1f2a36" text-anchor="start">id</text>
+<text x="1022" y="378" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED AI</text>
+<line x1="752" y1="385" x2="1032" y2="385" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="760" y="390" width="22" height="13" rx="3" fill="#2f6b8a"/>
+<text x="771" y="400" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+<text x="814" y="401" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">id_cliente</text>
+<text x="1022" y="401" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED</text>
+<line x1="752" y1="408" x2="1032" y2="408" stroke="#e1e6eb" stroke-width="1"/>
+<text x="814" y="424" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">direccion</text>
+<text x="1022" y="424" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(255)</text>
+<line x1="752" y1="431" x2="1032" y2="431" stroke="#e1e6eb" stroke-width="1"/>
+<text x="814" y="447" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">ciudad</text>
+<text x="1022" y="447" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(100)</text>
+<line x1="752" y1="454" x2="1032" y2="454" stroke="#e1e6eb" stroke-width="1"/>
+<text x="814" y="470" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">telefono</text>
+<text x="1022" y="470" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(30)</text>
+<rect x="1072" y="140" width="270" height="147" rx="6" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.8"/>
+<path d="M1072,172 V146 Q1072,140 1078,140 H1336 Q1342,140 1342,146 V172 Z" fill="#3a4a5c"/>
+<text x="1084" y="161" font-size="13.5" font-weight="bold" fill="#ffffff" text-anchor="start">pedidos</text>
+<rect x="1080" y="177" width="22" height="13" rx="3" fill="#1f2a36"/>
+<text x="1091" y="187" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
+<text x="1134" y="188" font-size="11.5" font-weight="bold" fill="#1f2a36" text-anchor="start">id</text>
+<text x="1332" y="188" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED AI</text>
+<line x1="1072" y1="195" x2="1342" y2="195" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="1080" y="200" width="22" height="13" rx="3" fill="#2f6b8a"/>
+<text x="1091" y="210" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+<text x="1134" y="211" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">id_cliente</text>
+<text x="1332" y="211" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED</text>
+<line x1="1072" y1="218" x2="1342" y2="218" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1134" y="234" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">total</text>
+<text x="1332" y="234" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">DECIMAL(10,2)</text>
+<line x1="1072" y1="241" x2="1342" y2="241" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1134" y="257" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">estado</text>
+<text x="1332" y="257" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">ENUM (5 valores)</text>
+<line x1="1072" y1="264" x2="1342" y2="264" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1134" y="280" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">fecha</text>
+<text x="1332" y="280" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">DATETIME</text>
+<rect x="1072" y="330" width="270" height="193" rx="6" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.8"/>
+<path d="M1072,362 V336 Q1072,330 1078,330 H1336 Q1342,330 1342,336 V362 Z" fill="#3a4a5c"/>
+<text x="1084" y="351" font-size="13.5" font-weight="bold" fill="#ffffff" text-anchor="start">detalle_pedidos</text>
+<rect x="1080" y="367" width="22" height="13" rx="3" fill="#1f2a36"/>
+<text x="1091" y="377" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
+<text x="1134" y="378" font-size="11.5" font-weight="bold" fill="#1f2a36" text-anchor="start">id</text>
+<text x="1332" y="378" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED AI</text>
+<line x1="1072" y1="385" x2="1342" y2="385" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="1080" y="390" width="22" height="13" rx="3" fill="#2f6b8a"/>
+<text x="1091" y="400" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+<text x="1134" y="401" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">id_pedido</text>
+<text x="1332" y="401" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED</text>
+<line x1="1072" y1="408" x2="1342" y2="408" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="1080" y="413" width="22" height="13" rx="3" fill="#7a3f6e"/>
+<text x="1091" y="423" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">RL</text>
+<text x="1134" y="424" font-size="11.5" font-weight="normal" fill="#7a3f6e" text-anchor="start">id_producto</text>
+<text x="1332" y="424" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED</text>
+<line x1="1072" y1="431" x2="1342" y2="431" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1134" y="447" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">nombre_producto</text>
+<text x="1332" y="447" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(150)</text>
+<line x1="1072" y1="454" x2="1342" y2="454" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1134" y="470" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">cantidad</text>
+<text x="1332" y="470" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED</text>
+<line x1="1072" y1="477" x2="1342" y2="477" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1134" y="493" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">precio_unitario</text>
+<text x="1332" y="493" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">DECIMAL(10,2)</text>
+<line x1="1072" y1="500" x2="1342" y2="500" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1134" y="516" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">subtotal</text>
+<text x="1332" y="516" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">DECIMAL(10,2)</text>
+<polyline points="752,183.5 738,183.5 738,396.5 752,396.5" fill="none" stroke="#2f6b8a" stroke-width="1.8"/>
+<text x="741" y="177.5" font-size="11" font-weight="bold" fill="#2f6b8a" text-anchor="start">1</text>
+<text x="741" y="390.5" font-size="11" font-weight="bold" fill="#2f6b8a" text-anchor="start">N</text>
+<polyline points="1032,183.5 1052,183.5 1052,206.5 1072,206.5" fill="none" stroke="#2f6b8a" stroke-width="1.8"/>
+<text x="1037" y="177.5" font-size="11" font-weight="bold" fill="#2f6b8a" text-anchor="start">1</text>
+<text x="1060" y="200.5" font-size="11" font-weight="bold" fill="#2f6b8a" text-anchor="start">N</text>
+<polyline points="1342,183.5 1355,183.5 1355,396.5 1342,396.5" fill="none" stroke="#2f6b8a" stroke-width="1.8"/>
+<text x="1345" y="177.5" font-size="11" font-weight="bold" fill="#2f6b8a" text-anchor="start">1</text>
+<text x="1345" y="390.5" font-size="11" font-weight="bold" fill="#2f6b8a" text-anchor="start">N</text>
+<rect x="1380" y="80" width="320" height="492" rx="10" fill="#fbfbfc" stroke="#3a4a5c" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="1394" y="104" font-size="14" font-weight="bold" fill="#3a4a5c" text-anchor="start">pagos_db</text>
+<text x="1394" y="122" font-size="11" font-weight="normal" fill="#5b6673" text-anchor="start">pagos-service · usuario pagos_user</text>
+<rect x="1395" y="140" width="290" height="216" rx="6" fill="#ffffff" stroke="#3a4a5c" stroke-width="1.8"/>
+<path d="M1395,172 V146 Q1395,140 1401,140 H1679 Q1685,140 1685,146 V172 Z" fill="#3a4a5c"/>
+<text x="1407" y="161" font-size="13.5" font-weight="bold" fill="#ffffff" text-anchor="start">pagos</text>
+<rect x="1403" y="177" width="22" height="13" rx="3" fill="#1f2a36"/>
+<text x="1414" y="187" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
+<text x="1457" y="188" font-size="11.5" font-weight="bold" fill="#1f2a36" text-anchor="start">id</text>
+<text x="1675" y="188" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED AI</text>
+<line x1="1395" y1="195" x2="1685" y2="195" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="1403" y="200" width="22" height="13" rx="3" fill="#7a3f6e"/>
+<text x="1414" y="210" font-size="8.5" font-weight="bold" fill="#ffffff" text-anchor="middle">RL</text>
+<text x="1457" y="211" font-size="11.5" font-weight="normal" fill="#7a3f6e" text-anchor="start">id_pedido</text>
+<text x="1675" y="211" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">INT UNSIGNED</text>
+<line x1="1395" y1="218" x2="1685" y2="218" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1457" y="234" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">monto</text>
+<text x="1675" y="234" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">DECIMAL(10,2)</text>
+<line x1="1395" y1="241" x2="1685" y2="241" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1457" y="257" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">metodo</text>
+<text x="1675" y="257" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">ENUM(stripe, paypal)</text>
+<line x1="1395" y1="264" x2="1685" y2="264" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="1403" y="269" width="22" height="13" rx="3" fill="#e1e6eb"/>
+<text x="1414" y="279" font-size="8.5" font-weight="bold" fill="#1f2a36" text-anchor="middle">UQ</text>
+<text x="1457" y="280" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">referencia_stripe</text>
+<text x="1675" y="280" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(100)</text>
+<line x1="1395" y1="287" x2="1685" y2="287" stroke="#e1e6eb" stroke-width="1"/>
+<rect x="1403" y="292" width="22" height="13" rx="3" fill="#e1e6eb"/>
+<text x="1414" y="302" font-size="8.5" font-weight="bold" fill="#1f2a36" text-anchor="middle">UQ</text>
+<text x="1457" y="303" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">referencia_paypal</text>
+<text x="1675" y="303" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">VARCHAR(100)</text>
+<line x1="1395" y1="310" x2="1685" y2="310" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1457" y="326" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">estado</text>
+<text x="1675" y="326" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">ENUM (3 valores)</text>
+<line x1="1395" y1="333" x2="1685" y2="333" stroke="#e1e6eb" stroke-width="1"/>
+<text x="1457" y="349" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">fecha_pago</text>
+<text x="1675" y="349" font-size="10.5" font-weight="normal" fill="#5b6673" text-anchor="end">DATETIME</text>
+<rect x="20" y="592" width="1680" height="190" rx="8" fill="#f6f8fa" stroke="#e1e6eb" stroke-width="1"/>
+<text x="36" y="616" font-size="12" font-weight="bold" fill="#7a3f6e" text-anchor="start">Referencias lógicas entre bases (RL): no tienen llave foránea porque las tablas están en bases distintas; se validan mediante las API.</text>
+<text x="36" y="636" font-size="11.5" font-weight="normal" fill="#7a3f6e" text-anchor="start">clientes.id_usuario → auth_db.usuarios.id   ·   detalle_pedidos.id_producto → catalogo_db.productos.id   ·   pagos.id_pedido → pedidos_db.pedidos.id</text>
+<text x="36" y="664" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">Valores de los ENUM:  pedidos.estado = pendiente · pagado · preparando · enviado · entregado   |   pagos.estado = pendiente · aprobado · rechazado</text>
+<text x="36" y="684" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">Baja lógica: productos.activo = 0.   detalle_pedidos guarda el nombre y el precio del producto al momento de la compra.</text>
+<text x="36" y="704" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">Índices adicionales: productos (activo, categoria_id, precio) · pedidos (estado, fecha) · pagos (id_pedido).   notificaciones-service no tiene base de datos.</text>
+<text x="36" y="746" font-size="12.5" font-weight="bold" fill="#1f2a36" text-anchor="start">Leyenda</text>
+<rect x="116" y="734" width="24" height="15" rx="3" fill="#1f2a36"/>
+<text x="128" y="745" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">PK</text>
+<text x="148" y="746" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">Llave primaria</text>
+<rect x="326" y="734" width="24" height="15" rx="3" fill="#2f6b8a"/>
+<text x="338" y="745" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">FK</text>
+<text x="358" y="746" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">Llave foránea</text>
+<rect x="536" y="734" width="24" height="15" rx="3" fill="#e1e6eb"/>
+<text x="548" y="745" font-size="9" font-weight="bold" fill="#1f2a36" text-anchor="middle">UQ</text>
+<text x="568" y="746" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">Valor único</text>
+<rect x="746" y="734" width="24" height="15" rx="3" fill="#7a3f6e"/>
+<text x="758" y="745" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">RL</text>
+<text x="778" y="746" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">Referencia lógica a otra base</text>
+<polyline points="956,742 996,742" fill="none" stroke="#2f6b8a" stroke-width="1.8"/>
+<text x="1004" y="746" font-size="11.5" font-weight="normal" fill="#1f2a36" text-anchor="start">Relación 1 a N (llave foránea)</text>
+<text x="1236" y="746" font-size="11.5" font-weight="normal" fill="#5b6673" text-anchor="start">AI = AUTO_INCREMENT</text>
+</svg>
+    <figcaption>Figura 8. Bases de datos aisladas por servicio, con los campos finales de db/init-master.sql.</figcaption>
   </figure>
   <section>
     <h2>Cómo leer el diagrama</h2>
     <ul>
-      <li>Cada recuadro de color es una base de datos independiente, propiedad de un solo servicio.</li>
-      <li>Las líneas dentro de un recuadro son relaciones entre tablas de la misma base de datos.</li>
-      <li>La línea punteada morada cruza de una base de datos a otra: es una referencia lógica. No existe llave foránea; el dato se consulta mediante la API del otro servicio.</li>
+      <li>Cada recuadro discontinuo es una base de datos independiente, propiedad de un solo servicio y con su propio usuario de MariaDB.</li>
+      <li>Las líneas azules son llaves foráneas (relación 1 a N) dentro de la misma base.</li>
+      <li>Los campos marcados RL (en morado) son referencias lógicas a otra base: no tienen llave foránea y se validan mediante la API del otro servicio.</li>
     </ul>
   </section>
   <section>
-    <h2>Puntos pendientes de confirmar con el desarrollador</h2>
+    <h2>Decisiones aplicadas</h2>
     <ul>
-      <li>Tipos de datos y restricciones de todos los campos (por ejemplo, si email es único).</li>
-      <li>Campos de las tablas categorias, clientes, detalle_pedidos y direcciones.</li>
-      <li>Campo de productos que la relaciona con categorias (el enunciado permite filtrar por categoría, pero no lista ese campo).</li>
-      <li>Si direcciones se relaciona con clientes o con pedidos.</li>
-      <li>Cómo se vincula clientes (pedidos_db) con usuarios (auth_db).</li>
-      <li>Cómo detalle_pedidos identifica el producto de catálogo y si guarda el precio al momento de la compra.</li>
-      <li>Dónde se guarda la referencia de PayPal: el enunciado solo define referencia_stripe.</li>
+      <li>Llaves primarias INT UNSIGNED AUTO_INCREMENT; importes DECIMAL(10,2); email y referencias de pago únicos.</li>
+      <li>Campos de categorias, clientes, detalle_pedidos y direcciones definidos (D5); productos.categoria_id es llave foránea hacia categorias.</li>
+      <li>direcciones se relaciona con clientes; clientes.id_usuario corresponde a usuarios.id de auth_db (D6).</li>
+      <li>detalle_pedidos guarda el id, el nombre y el precio del producto al momento de la compra.</li>
+      <li>pagos agrega referencia_paypal junto a referencia_stripe (D4).</li>
     </ul>
   </section>
 </main>

@@ -4,17 +4,19 @@ sequenceDiagram
     participant GW as API Gateway<br/>(Nginx)
     participant AUTH as auth-service
     participant DB as auth_db
+    participant R as Redis
     participant SRV as Servicio protegido<br/>(ej. pedidos, catálogo)
 
     rect rgba(120,160,200,0.12)
     Note over U,DB: Fase 1. Registro (solo clientes)
     U->>GW: POST /api/auth/register (nombre, email, password)
     GW->>AUTH: POST /api/auth/register
-    AUTH->>AUTH: Cifrar password con bcrypt
+    AUTH->>AUTH: Validar datos y cifrar password con bcrypt
     AUTH->>DB: INSERT usuario (rol: cliente)
     DB-->>AUTH: Usuario creado
-    AUTH-->>GW: Registro exitoso
-    GW-->>U: Registro exitoso
+    AUTH-->>GW: 201 Created
+    GW-->>U: 201 Created
+    Note over U,AUTH: Errores: 422 datos no válidos · 409 correo ya registrado
     end
 
     rect rgba(200,170,110,0.12)
@@ -24,27 +26,36 @@ sequenceDiagram
     AUTH->>DB: SELECT usuario por email
     DB-->>AUTH: Datos del usuario (password_hash, rol)
     AUTH->>AUTH: Verificar password con bcrypt
-    AUTH->>AUTH: Generar JWT firmado con el rol<br/>(expira en 2 h cliente / 8 h administrador)
-    AUTH-->>GW: JWT
-    GW-->>U: JWT
+    alt Credenciales correctas
+        AUTH->>AUTH: Generar JWT HS256 con el rol<br/>(expira en 2 h cliente / 8 h administrador)
+        AUTH-->>GW: 200 OK + JWT
+        GW-->>U: 200 OK + JWT
+    else Credenciales incorrectas
+        AUTH-->>GW: 401 Unauthorized
+        GW-->>U: 401 Unauthorized
+    end
     end
 
     rect rgba(130,180,140,0.12)
     Note over U,SRV: Fase 3. Acceso a un recurso protegido
-    U->>GW: Petición con encabezado Authorization: Bearer JWT
+    U->>GW: Petición con Authorization: Bearer JWT
     GW->>SRV: Petición + JWT
-    SRV->>AUTH: POST /api/auth/verify (JWT)
+    SRV->>AUTH: POST /api/auth/verify (JWT, red interna)
+    AUTH->>AUTH: Verificar firma HS256 y expiración
+    AUTH->>R: ¿Token revocado (logout)?
+    R-->>AUTH: Revocado o no
     alt Token válido y rol con permiso
-        AUTH-->>SRV: Token válido + rol
-        SRV-->>GW: Respuesta con los datos solicitados
-        GW-->>U: Respuesta con los datos solicitados
-    else Token inválido o expirado
-        AUTH-->>SRV: Token no válido
-        SRV-->>GW: Acceso denegado
-        GW-->>U: Acceso denegado
+        AUTH-->>SRV: 200 OK (válido + rol)
+        SRV-->>GW: 200 OK + datos solicitados
+        GW-->>U: 200 OK + datos solicitados
+    else Token inválido, expirado o revocado
+        AUTH-->>SRV: 401 (no válido)
+        SRV-->>GW: 401 Unauthorized
+        GW-->>U: 401 Unauthorized
     else Token válido, pero rol sin permiso
-        AUTH-->>SRV: Token válido + rol cliente
-        SRV-->>GW: Acceso denegado (requiere administrador)
-        GW-->>U: Acceso denegado
+        AUTH-->>SRV: 200 OK (válido + rol cliente)
+        SRV-->>GW: 403 Forbidden (requiere administrador)
+        GW-->>U: 403 Forbidden
     end
+    Note over AUTH,SRV: Sin token: el servicio responde 401 sin llamar a auth.<br/>Si auth-service no responde: 503 Service Unavailable
     end

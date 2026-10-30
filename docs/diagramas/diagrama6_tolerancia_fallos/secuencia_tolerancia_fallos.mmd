@@ -17,7 +17,7 @@ sequenceDiagram
     GW->>CAT: GET /api/catalogo/productos
     CAT->>SL: SELECT productos (lectura)
     SL-->>CAT: Lista de productos
-    CAT-->>GW: Productos (JSON)
+    CAT-->>GW: 200 OK (JSON)
     GW-->>C: Catálogo visible con normalidad
     end
 
@@ -25,19 +25,19 @@ sequenceDiagram
     Note over C,MA: Fase 2. La compra se completa
     C->>GW: POST /api/pedidos
     GW->>PED: POST /api/pedidos
-    Note over PED,PAG: Verificación de stock y cobro con Stripe o PayPal<br/>(igual que en el diagrama de flujo de compra)
+    Note over PED,PAG: Verificación de stock y cobro<br/>con Stripe o PayPal (igual que en<br/>el diagrama de flujo de compra)
     PAG->>PED: Notificar pago confirmado
     PED->>MA: UPDATE pedido (estado: pagado)
     end
 
     rect rgba(220,120,120,0.14)
     Note over PAG,NOT: Fase 3. Falla aislada en notificaciones
-    PAG-xNOT: Notificar pago confirmado
-    Note over PAG,NOT: Sin respuesta: el servicio está detenido.<br/>Manejo de la falla [PENDIENTE]
+    PAG-xNOT: Solicitar correo de confirmación
+    Note over PAG,NOT: Sin respuesta en el tiempo de espera (≈3 s):<br/>pagos-service registra el fallo y no detiene la compra
     end
 
     rect rgba(130,180,140,0.12)
     Note over C,PED: Fase 4. El cliente recibe la confirmación
-    PED-->>GW: Pedido confirmado
-    GW-->>C: Confirmación del pedido (sin email)
+    PED-->>GW: 201 Created (pedido pagado, correo_enviado: false)
+    GW-->>C: Confirmación del pedido (sin correo)
     end

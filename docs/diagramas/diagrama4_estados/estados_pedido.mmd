@@ -1,21 +1,25 @@
+%% Versión Mermaid equivalente. La figura del informe (PNG/SVG) se genera con generar.py para controlar el diseño.
 stateDiagram-v2
     direction TB
     [*] --> Pendiente: Cliente crea el pedido<br/>POST /api/pedidos
-    Pendiente --> Pagado: Pago confirmado<br/>(notifica pagos-service)
-    Pagado --> Preparando: Administrador cambia estado<br/>PUT /api/pedidos/{id}/estado
-    Preparando --> Enviado: Administrador cambia estado<br/>PUT /api/pedidos/{id}/estado
-    Enviado --> Entregado: Administrador cambia estado<br/>PUT /api/pedidos/{id}/estado
+    Pendiente --> Pagado: Pago confirmado (lo asigna el sistema)<br/>PUT /api/pedidos/interno/{id}/pagado
+    Pagado --> Preparando: Administrador<br/>PUT /api/pedidos/{id}/estado
+    Preparando --> Enviado: Administrador<br/>PUT /api/pedidos/{id}/estado
+    Enviado --> Entregado: Administrador<br/>PUT /api/pedidos/{id}/estado
     Entregado --> [*]
 
-    note right of Pagado
-        Estado del flujo de compra (sección 3.1).
-        No figura en la lista de la sección 6.3.
-        Ubicación [PENDIENTE] de confirmar.
+    note left of Pendiente
+        Pago rechazado o PayPal no aprobado:
+        el pedido sigue pendiente y el
+        cliente puede reintentar el pago.
     end note
-    note right of Pendiente
-        Pago rechazado o pedido
-        cancelado: [PENDIENTE]
+    note left of Pagado
+        Solo lo asigna el sistema, al confirmarse
+        el pago: se descuenta el stock, se genera
+        el QR y se envía el correo.
     end note
-
-    classDef pend stroke-dasharray: 6 4,stroke:#b03a2e,stroke-width:2px,fill:#fff7f5
-    class Pagado pend
+    note left of Enviado
+        El administrador solo avanza al
+        estado siguiente; cualquier otro
+        cambio responde 409 Conflict.
+    end note

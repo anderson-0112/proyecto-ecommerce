@@ -1,6 +1,6 @@
 # CONTINUIDAD — Proyecto Final No. 2: E-Commerce Distribuido (Tienda de Electrónica y Tecnología)
 
-> Archivo de traspaso. Última actualización: **30 de octubre de 2026, 16:15 (hora de Guatemala)** — copia unificada (repo + Proyecto) tras el **Bloque 6** e informe **v4**.
+> Archivo de traspaso. Última actualización: **30 de octubre de 2026, 16:25 (hora de Guatemala)** — Bloque 7 en curso: figuras actualizadas e informe **v5**.
 > **Fuente de verdad de los requisitos:** `Proyecto2_ECommerce_Distribuido.docx` (enunciado del ingeniero).
 > Si este archivo y el enunciado se contradicen, **manda el enunciado**.
 > Ubicación: raíz del Proyecto en Claude (Contexto) **y** `docs/CONTINUIDAD_PROYECTO2.md` en el repositorio. Mantener ambas copias iguales (ver sección 12).
@@ -9,9 +9,9 @@
 
 ## 0. Estado en una línea
 
-Análisis ✅ · **Informe v4** (C1–C15 + Bloques 0–6 incorporados) ✅ · 7 diagramas ✅ · Arquitectura (Fig. 1) ⏳ · Decisiones D1–D21 y D-PAGO ✅ · **Bloque 0 ✅ · Bloque 1 ✅ (compra 4242 → pedido `pagado`; 41/41 pruebas) · Bloque 2 ✅ (Master-Slave + Redis; 15/15) · Bloque 3 ✅ (tienda NodoTec + panel admin) · Bloque 4 ✅ (7 APIs externas visibles) · Bloque 5 ✅ (138/138 pruebas)** · **Bloque 6 ✅ (https://nodotec.tech y /admin/ con HTTPS; 138/138 en producción)** · Hosting: VPS de Hostinger (`179.197.91.34`).
+Análisis ✅ · **Informe v5** (C1–C15 + Bloques 0–6 + 8 figuras insertadas) ✅ · 8 diagramas ✅ (arquitectura incluida, sin `[PENDIENTE]`) · Decisiones D1–D21 y D-PAGO ✅ · **Bloque 0 ✅ · Bloque 1 ✅ (compra 4242 → pedido `pagado`; 41/41 pruebas) · Bloque 2 ✅ (Master-Slave + Redis; 15/15) · Bloque 3 ✅ (tienda NodoTec + panel admin) · Bloque 4 ✅ (7 APIs externas visibles) · Bloque 5 ✅ (138/138 pruebas)** · **Bloque 6 ✅ (https://nodotec.tech y /admin/ con HTTPS; 138/138 en producción)** · Hosting: VPS de Hostinger (`179.197.91.34`).
 
-**Siguiente paso exacto:** **Bloque 7** (documentación final, chat del Proyecto): Fig. 1 de arquitectura e inserción/actualización de las figuras (DER con campos finales, estados con D1/D2). Anderson: compra manual en producción con 4242 y con PayPal sandbox (no automatizable), capturas para la sección 15 desde https://nodotec.tech, portada (con **NodoTec**) y norma de citación; luego PDF final.
+**Siguiente paso exacto:** **Bloque 7** (chat del Proyecto): guion de demo de 10 min y lista de capturas para la sección 15. Anderson: compra manual en producción con 4242 y con PayPal sandbox, capturas desde https://nodotec.tech, portada (con **NodoTec**) y norma de citación; luego conclusiones (17), referencias (18) y PDF final.
 
 ---
 
@@ -154,17 +154,17 @@ Comando: `docker-compose up --build -d`.
 
 ## 4. Estado del informe (documentación — se lleva en el chat del Proyecto)
 
-**Versión maestra:** `Informe Proyecto Final No. 2 — E-Commerce Distribuido_v4.docx` (30-oct), que guarda Anderson (fuera del repo: `docs/Informe*.docx` está en `.gitignore`). En el Contexto del Proyecto está su **texto** (el Proyecto solo admite texto). Cada nueva versión se genera sobre la anterior y se entrega como `_v4`, `_v5`… ⚠️ El Claude Doc https://claude.ai/artifact/QD8pPeaP2CxNVP8yfFWPiW está **desactualizado**; no usarlo.
+**Versión maestra:** `Informe Proyecto Final No. 2 — E-Commerce Distribuido_v5.docx` (30-oct, en `docs/`), que guarda Anderson (fuera del repo: `docs/Informe*.docx` está en `.gitignore`). En el Contexto del Proyecto está su **texto** (el Proyecto solo admite texto). Cada nueva versión se genera sobre la anterior y se entrega como `_v4`, `_v5`… ⚠️ El Claude Doc https://claude.ai/artifact/QD8pPeaP2CxNVP8yfFWPiW está **desactualizado**; no usarlo.
 
-| Sección | Estado (v4) |
+| Sección | Estado (v5) |
 |---|---|
 | Portada | ⛔ **No tocar** — la hace Anderson. ⚠️ Debe poner ahí el nombre comercial **NodoTec** (campo `[PENDIENTE]` de la portada) |
-| 1–6 | ✅ (C1 con ambos integrantes y "NodoTec"; PayPal en 4.2 y 5.2) · ⏳ insertar Fig. 4 en 5.2 |
+| 1–6 | ✅ (C1 con ambos integrantes y "NodoTec"; PayPal en 4.2 y 5.2) · ✅ Figura 1 (casos de uso) en 5.2 |
 | 7. Alcance | ✅ C7, C8 · 7.2 con limitaciones reales (Redis caído acepta tokens revocados; dirección más reciente) |
 | 8. Requerimientos | ✅ RF-19 |
 | 9. Tecnologías | ✅ versiones reales (local y producción), PHP 8.3 + Apache, Redis sin sesiones, hosting VPS de Hostinger |
-| 10. Arquitectura | ✅ 10.2 (notas de puertos, Apache, Redis), 10.3 (HS256, rutas internas), 10.4 (PayPal, idempotencia), 10.5 (5 escenarios) · ⏳ **Fig. 1** (arquitectura) y Figs. 2, 5–8 por insertar; Fig. 5 debe reflejar D1/D2 |
-| 11. Base de datos | ✅ tipos, llaves, usuarios por servicio, baja lógica, replicación y comprobación, 20 productos / 7 categorías · ⏳ Fig. 3 (DER) a revisar con campos finales |
+| 10. Arquitectura | ✅ 10.2 (notas de puertos, Apache, Redis), 10.3 (HS256, rutas internas), 10.4 (PayPal, idempotencia), 10.5 (5 escenarios) · ✅ Figuras 2–7 insertadas (arquitectura, autenticación, flujo de compra, estados con D1/D2, checkout, tolerancia) |
+| 11. Base de datos | ✅ tipos, llaves, usuarios por servicio, baja lógica, replicación y comprobación, 20 productos / 7 categorías · ✅ Figura 8 (DER con campos finales) |
 | 12. APIs | ✅ integración de las 6 APIs |
 | 13. Endpoints | ✅ rutas finales, accesos, ejemplo POST /api/pedidos |
 | 14. Despliegue | ✅ (v4) estructura real, requisitos, proveedor autorizado, servidor, dominio y certificado, 8 pasos del procedimiento, URLs |
@@ -180,16 +180,20 @@ Comando: `docker-compose up --build -d`.
 
 Carpeta: `docs/diagramas/` en el repo (copiar desde el paquete). Cada diagrama tiene PNG, SVG, HTML y, cuando aplica, `.mmd`.
 
-| Fig. | Diagrama | Estado | Sección del informe | Archivos |
+Numeración del informe v5 = **orden de aparición** (las figuras anchas van en páginas horizontales).
+
+| Fig. (v5) | Diagrama | Estado | Sección | Archivos |
 |---|---|---|---|---|
-| 1 | **Arquitectura** (obligatorio) | ⏳ Tras Bloque 2, con lo implementado | 10.1 | — |
-| 2 | Secuencia: flujo de compra | ✅ Aprobado — **se mantiene sin cambios** (D-PAGO opción B respeta pedidos → pagos) | 10.4 | `diagrama1_secuencia/` (.mmd) |
-| 3 | DER por microservicio | ✅ Aprobado · revisar al cerrar SQL (campos D5, `referencia_paypal` D4) | 11.1 | `diagrama2_der/` |
-| 4 | Casos de uso | ✅ Aprobado | 5.2 | `diagrama3_casos_uso/` |
-| 5 | Estados del pedido | ✅ Aprobado · verificar que incluya `pagado` (D1) | 10.4 | `diagrama4_estados/` (.mmd) |
-| 6 | Secuencia: autenticación JWT | ✅ Aprobado · completar códigos HTTP (D18) | 10.3 | `diagrama5_autenticacion/` (.mmd) |
-| 7 | Secuencia: tolerancia a fallos | ✅ Aprobado | 10.5 | `diagrama6_tolerancia_fallos/` (.mmd) |
-| 8 | Actividades: checkout | ✅ Entregado | 10.4 | `diagrama7_actividades/` (.mmd) |
+| 1 | Casos de uso | ✅ `mailto:` (D12) en lugar de "mecanismo PENDIENTE" | 5.2 | `diagrama3_casos_uso/` |
+| 2 | **Arquitectura** (obligatorio) | ✅ Aprobado por Anderson (30-oct) | 10.1 | `diagrama0_arquitectura/` (`generar.py`) |
+| 3 | Secuencia: autenticación JWT | ✅ Códigos HTTP (D18), Redis/revocados, 503 | 10.3 | `diagrama5_autenticacion/` (.mmd) |
+| 4 | Secuencia: flujo de compra | ✅ Sin cambios (D-PAGO opción B) | 10.4 | `diagrama1_secuencia/` (.mmd) |
+| 5 | Estados del pedido | ✅ D1/D2, 409 en transiciones no válidas | 10.4 | `diagrama4_estados/` (`generar.py`) |
+| 6 | Actividades: checkout | ✅ D3 (409 → carrito) y D2 (reintento); ahora horizontal | 10.4 | `diagrama7_actividades/` (.mmd) |
+| 7 | Secuencia: tolerancia a fallos | ✅ D15 (timeout ≈3 s, `correo_enviado: false`) | 10.5 | `diagrama6_tolerancia_fallos/` (.mmd) |
+| 8 | DER por microservicio | ✅ Campos y tipos finales, `referencia_paypal`, referencias lógicas | 11.1 | `diagrama2_der/` (`generar.py`) |
+
+Los `.mmd` se renderizan con `docs/diagramas/mermaid-config.json`; arquitectura, estados y DER se generan con su `generar.py` (Python + cairosvg, utilidades en `svglib.py`).
 
 No se hace diagrama de clases (se usa DER). Casos de uso: un solo diagrama.
 
@@ -289,13 +293,13 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 
 - [x] URL pública de la tienda (catálogo sin registro) — https://nodotec.tech
 - [x] URL del panel admin + credenciales — https://nodotec.tech/admin/
-- [ ] Repo GitHub **público** con los 5 servicios, `docker-compose.yml`, README, sin secretos — ⏳ confirmar que el repositorio sea público
+- [x] Repo GitHub **público** con los 5 servicios, `docker-compose.yml`, README, sin secretos (confirmado por Anderson, 30-oct)
 - [x] Scripts SQL con 20+ productos con imágenes reales (`db/init-master.sql`, Cloudinary)
 - [ ] PDF del informe (portada de Anderson + diagramas + endpoints + capturas)
 - [x] Credenciales: admin, cliente, tarjeta Stripe, cuenta PayPal sandbox (informe §16)
 - [x] Evidencias de pruebas (reporte + colección; local y producción)
 - [x] Guía de defensa (`docs/guia-defensa.md`) · ⏳ ensayar el guion de demo
-- [ ] Diagrama de arquitectura insertado (Fig. 1)
+- [x] Diagrama de arquitectura y demás figuras insertados (informe v5)
 - [ ] Desactivar renovación automática del VPS y del dominio
 
 ---
@@ -322,6 +326,8 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 - 2026-10-30 — Informe v3: incorporados los Bloques 0–5 (versiones, notas de arquitectura, 5 escenarios de tolerancia, tipos y llaves, replicación, integración de las 6 APIs, rutas finales con ejemplo, requisitos de despliegue, resultados 138/138, cuenta PayPal sandbox). Pendiente v4: despliegue, URLs, figuras y capturas.
 - 2026-10-30 — **Bloque 6 terminado:** desplegado en el VPS de Hostinger (Ubuntu 24.04, 179.197.91.34) con el mismo `docker-compose.yml`: **https://nodotec.tech** y **/admin/**. DNS ya correcto (A y AAAA al VPS). Docker 29.9 + Compose v5.6 desde el repositorio oficial, UFW (22/80/443), SSH solo con llave, swap 2 GB. `.env` de producción con claves nuevas (`openssl rand`) y `APP_URL=https://nodotec.tech`. HTTPS Let's Encrypt (HTTP-01, certbot en contenedor con perfil; renovación por cron, `--dry-run` OK; vence 28-ene-2027). Gateway: rutas movidas a `nginx/rutas.conf`; `nginx-https.conf` nuevo (80→301 HTTPS, `www`→dominio); compose publica 443 y elige config con `NGINX_CONF`. `ejecutar-pruebas.sh` acepta `GATEWAY`. Batería completa una vez contra la URL pública: **138/138** (`docs/pruebas/produccion/`).
 - 2026-10-30 — Informe v4: sección 14 completa (estructura real, servidor, dominio y certificado, 8 pasos, URLs), URLs en §16, pruebas en producción en §15.4; quitado el resaltado amarillo de títulos sin pendientes y alineado el bloque de código de 14.1.
+- 2026-10-30 — CONTINUIDAD unificado subido al repo por Anderson (commit + push OK). Repositorio confirmado como público. El chat del Proyecto se continúa en uno nuevo (chat largo, A15).
+- 2026-10-30 — **Bloque 7 (parte 1):** diagrama de arquitectura aprobado por Anderson. Figuras actualizadas con las decisiones aprobadas: casos de uso (D12), estados (D1/D2), DER (D4–D6, tipos finales), autenticación (D18, Redis), tolerancia (D15), checkout (D2/D3). Informe **v5** con las 8 figuras insertadas, numeradas por orden de aparición; casos de uso, arquitectura, estados, checkout y DER en páginas horizontales. Sin cambios en el código.
 
 ---
 
