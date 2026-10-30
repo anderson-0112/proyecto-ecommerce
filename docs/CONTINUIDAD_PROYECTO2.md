@@ -318,6 +318,7 @@ Claude Code mantiene `docs/guia-defensa.md` al cerrar cada bloque: qué hace cad
 - 2026-09/10 — Diagramas aprobados: secuencia compra, DER, casos de uso, estados, autenticación, tolerancia a fallos; actividades entregado.
 - 2026-10-29 — Anderson asume todo el proyecto. Hostinger descartado; Railway elegido. Desarrollo con Claude Code. Archivo de continuidad creado.
 - 2026-10-29 — Aprobadas en bloque D1–D19, D-PAGO (opción B: pedidos llama a pagos; tarjeta tokenizada en el navegador; diagrama de secuencia sin cambios), D20 (descuento de stock al pagar) y D21 (USD). Confirmado que el negocio no repite el Proyecto 1. Revisión del .docx: C2–C6, C9, C11–C15 ya aplicadas; pendientes C1 (parcial), C7, C8, C10. Definida la división código (Claude Code) / documentación (chat del Proyecto) y el protocolo de continuidad (sección 12).
+- 2026-10-29 — **Bloque 0 terminado:** repo git inicializado (rama `main`), `.gitignore` (excluye `.env`, verificado con `git check-ignore`), `.gitattributes` (LF para .sh/.php/.sql/.conf/Dockerfile), `.env.example`, README inicial, estructura de carpetas de la sección 2.5; remoto `anderson-0112/proyecto-ecommerce` conectado y push hecho.
 
 ---
 
